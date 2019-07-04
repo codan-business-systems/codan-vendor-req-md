@@ -1,0 +1,119 @@
+<mvc:View controllerName="approve.req.vendor.codan.controller.Detail" xmlns="sap.m" xmlns:mvc="sap.ui.core.mvc" xmlns:semantic="sap.m.semantic"
+	xmlns:footerbar="sap.ushell.ui.footerbar" xmlns:f="sap.ui.layout.form" xmlns:l="sap.ui.layout" xmlns:core="sap.ui.core"
+	xmlns:codan="approve.req.vendor.codan.control">
+	<semantic:DetailPage id="page" navButtonPress="onNavBack" showNavButton="{device>/system/phone}" title="{i18n>detailTitle}"
+		busy="{detailView>/busy}" busyIndicatorDelay="{detailView>/delay}">
+		<semantic:content>
+			<ObjectHeader id="objectHeader" title="{name1}">
+				<attributes>
+					<ObjectAttribute id="abnAttribute" text="ABN/Tax Number: {abn}"/>
+					<ObjectAttribute id="vendorIdAttribute" visible="{existingVendor}" text="Vendor ID: {vendorId}"/>
+				</attributes>
+			</ObjectHeader>
+			<IconTabBar id="iconTabBar" class="sapUiResponsiveContentPadding" selectedKey="{detailView>/selectedTab}">
+				<items>
+					<IconTabFilter id="iconTabBarFilter1" key="tab1" icon="sap-icon://hint" tooltip="{i18n>detailIconTabBarInfo}">
+						<Panel id="detailIconPanel">
+							<HBox width="100%">
+								<VBox width="50%">
+									<l:BlockLayout>
+										<l:BlockLayoutRow scrollable="false">
+											<l:BlockLayoutCell>
+												<codan:ListItemWithColorIcon visible="{= !${existingVendor} }" id="newVendorListItem" title="New Vendor" icon="sap-icon://alert"
+													infoState="Error" iconInset="false"/>
+												<codan:ListItemWithColorIcon id="bankDetailsListItem" title="Bank Details"
+													description="{= !!${bankVerifiedWith} ? 'Entered and Verified With: ' + ${bankVerifiedWith} : 'Not Provided' }"
+													icon="{= !!${bankVerifiedWith} ? 'sap-icon://sys-enter' : 'sap-icon://sys-cancel' }"
+													infoState="{= !!${bankVerifiedWith} ? 'Success' : 'Error' }" iconInset="false"/>
+												<codan:ListItemWithColorIcon visible="{existingVendor}" id="companyListItem" title="Company Code Assignment"
+													description="{= ${companyChangeFlag} ? 'Change Requested' : 'No Change Requested' }"
+													icon="{= ${companyChangeFlag} ? 'sap-icon://sys-enter' : 'sap-icon://sys-cancel' }"
+													infoState="{= ${companyChangeFlag} ? 'Success' : 'Error' }" iconInset="false"/>
+												<codan:ListItemWithColorIcon visible="{existingVendor}" id="contactListItem" title="Contact Details"
+													description="{= ${contactDetailChangeFlag} ? 'Change Requested' : 'No Change Requested' }"
+													icon="{= ${contactDetailChangeFlag} ? 'sap-icon://sys-enter' : 'sap-icon://sys-cancel' }"
+													infoState="{= ${contactDetailChangeFlag} ? 'Success' : 'Error' }" iconInset="false"/>
+												<codan:ListItemWithColorIcon visible="{existingVendor}" id="addressListItem" title="Address"
+													description="{= ${addressChangeFlag} ? 'Change Requested' : 'No Change Requested' }"
+													icon="{= ${addressChangeFlag} ? 'sap-icon://sys-enter' : 'sap-icon://sys-cancel' }"
+													infoState="{= ${addressChangeFlag} ? 'Success' : 'Error' }" iconInset="false"/>
+											</l:BlockLayoutCell>
+										</l:BlockLayoutRow>
+									</l:BlockLayout>
+								</VBox>
+								<VBox width="50%" height="100%">
+									<!--<Panel id="orgAssignmentPanel" class="orgAssignmentPanel">-->
+									<Table id="orgAssignmentTable" items="{ToOrgAssignments}" class="sapUiSizeCompact" busyIndicatorDelay="{detailView>/tableBusyDelay}"
+										fixedLayout="false" width="auto" height="100%">
+										<!--<infoToolbar>
+								<Toolbar>
+									<Text text="{i18n>txtOrgAssignmentExplain}" visible="{detailView>/existingVendor}"/>
+									<Text text="" visible="{= !${detailView>/existingVendor} }"/>
+								</Toolbar>
+							</infoToolbar>-->
+										<headerToolbar>
+											<Toolbar>
+												<Title text="{i18n>txtCompanyCodes}"/>
+											</Toolbar>
+										</headerToolbar>
+										<columns>
+											<Column id="colCompanyCode"/>
+											<Column id="colStockProcurement"/>
+										</columns>
+										<items>
+											<ColumnListItem type="Inactive">
+												<ObjectIdentifier text="{companyCodeText} ({companyCode})"/>
+												<Switch state="{companyActive}" enabled="{detailView>/editMode}"/>
+											</ColumnListItem>
+										</items>
+									</Table>
+									<!--</Panel>-->
+								</VBox>
+							</HBox>
+						</Panel>
+						<Panel>
+							<Link text="{i18n>txtLinkDisplayRequest}" press="navigateToReq"/>
+						</Panel>
+					</IconTabFilter>
+					<IconTabFilter id="iconTabApprovals" key="tab3" icon="sap-icon://person-placeholder" 
+								   iconColor="{= ${status} === 'A' ? 'Positive' : 'Negative' }" tooltip="Approvals">
+						<List id="approvalsList" showSeparators="All" inset="true" items="{ToApprovals}">
+							<StandardListItem id="approvalListItems" title="{stepDescription}" 
+											  icon="{ parts:[{path:'{approvalResult}'}], formatter: '.formatter.formatApprovalIcon' }"
+											  iconInset="false"
+											  description="{= ${approverName} ? ${approverName} : ${approvalResultText} }"/>
+						</List>
+					</IconTabFilter>
+			
+					<IconTabFilter id="iconTabAttachment" key="tab2" icon="sap-icon://attachment" tooltip="{i18n>detailIconTabBarAttachments}" 
+									count="{attachmentCount}">
+						<List id="attachmentsList" showSeparators="None" inset="true" items="{ToAttachments}" noDataText="{i18n>txtNoAttachments}">
+							<StandardListItem id="attachmentListItems"
+								title="{description}"
+								icon="{parts:[{path:'mimeType'}], formatter:'sap.ui.core.IconPool.getIconForMimeType'}"
+								iconInset="false"
+								description="{parts:[{path:'fileSize'}], formatter: 'approve.req.vendor.codan.model.formatter.formatAttachmentSize'}"
+								press="downloadAttachment"
+								type="Active"/>
+						</List>
+					</IconTabFilter>
+				</items>
+			</IconTabBar>
+		</semantic:content>
+		<semantic:positiveAction>
+			<semantic:PositiveAction id="btnApprove" text="Approve" press="onApprove"/>
+		</semantic:positiveAction>
+		<semantic:negativeAction>
+			<semantic:NegativeAction id="btnReject" text="Reject" press="onReject"/>
+		</semantic:negativeAction>
+		<semantic:sendEmailAction>
+			<semantic:SendEmailAction id="shareEmail" press="onShareEmailPress"/>
+		</semantic:sendEmailAction>
+		<semantic:shareInJamAction>
+			<semantic:ShareInJamAction id="shareInJam" visible="{FLP>/isShareInJamActive}" press="onShareInJamPress"/>
+		</semantic:shareInJamAction>
+		<semantic:saveAsTileAction>
+			<footerbar:AddBookmarkButton id="shareTile" title="{detailView>/saveAsTileTitle}"/>
+		</semantic:saveAsTileAction>
+	</semantic:DetailPage>
+</mvc:View>

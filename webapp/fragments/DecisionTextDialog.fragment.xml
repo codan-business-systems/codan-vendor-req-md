@@ -1,0 +1,15 @@
+<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core" xmlns:l="sap.ui.layout">
+<Dialog title="{i18n>dlgDecisionNotesTitle}" contentWidth="40rem" id="decisionTextDialog" showHeader="true">
+	<content>
+		<l:VerticalLayout width="100%">
+			<Text text="{= ${detailView>/approvalResult} === 'A' ? ${i18n>txtDialogDecisionText} : ${i18n>txtRejectDialogDecisionText} }" class="sapUiSmallMargin"/>
+			<TextArea width="100%" value="{detailView>/decisionText}" 
+			placeholder="{= ${detailView>/approvalResult} === 'A' ? ${i18n>txtApprovePlaceholder} : ${i18n>txtRejectionPlaceholder} }"/>
+		</l:VerticalLayout>
+	</content>
+	<buttons>
+			<Button text="{i18n>btnCancel}" type="Reject" press="cancelDecisionDialog"/>
+			<Button text="{i18n>btnOk}" type="Emphasized" press="okDecisionDialog"/>
+	</buttons>
+</Dialog>
+</core:FragmentDefinition>

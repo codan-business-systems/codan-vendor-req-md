@@ -1,0 +1,11 @@
+.orgAssignmentPanel>.sapMPanelContent {
+	padding-bottom: 2.5rem;
+}
+
+.zSuccessIcon {
+	color: green;
+}
+
+.zErrorIcon {
+	color: gray;
+}
