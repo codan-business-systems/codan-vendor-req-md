@@ -25,10 +25,10 @@
 													description="{= !!${bankVerifiedWith} ? 'Entered and Verified With: ' + ${bankVerifiedWith} : 'Not Provided' }"
 													icon="{= !!${bankVerifiedWith} ? 'sap-icon://sys-enter' : 'sap-icon://sys-cancel' }"
 													infoState="{= !!${bankVerifiedWith} ? 'Success' : 'Error' }" iconInset="false"/>
-												<codan:ListItemWithColorIcon visible="{existingVendor}" id="companyListItem" title="Company Code Assignment"
-													description="{= ${companyChangeFlag} ? 'Change Requested' : 'No Change Requested' }"
-													icon="{= ${companyChangeFlag} ? 'sap-icon://sys-enter' : 'sap-icon://sys-cancel' }"
-													infoState="{= ${companyChangeFlag} ? 'Success' : 'Error' }" iconInset="false"/>
+												<codan:ListItemWithColorIcon visible="{existingVendor}" id="paymentMethodsListItem" title="Payment Methods"
+													description="{= ${paymentMethodsChangeFlag} ? 'Change Requested' : 'No Change Requested' }"
+													icon="{= ${paymentMethodsChangeFlag} ? 'sap-icon://sys-enter' : 'sap-icon://sys-cancel' }"
+													infoState="{= ${paymentMethodsChangeFlag} ? 'Success' : 'Error' }" iconInset="false"/>
 												<codan:ListItemWithColorIcon visible="{existingVendor}" id="contactListItem" title="Contact Details"
 													description="{= ${contactDetailChangeFlag} ? 'Change Requested' : 'No Change Requested' }"
 													icon="{= ${contactDetailChangeFlag} ? 'sap-icon://sys-enter' : 'sap-icon://sys-cancel' }"
@@ -81,6 +81,7 @@
 							<StandardListItem id="approvalListItems" title="{stepDescription}" 
 											  icon="{ parts:[{path:'{approvalResult}'}], formatter: '.formatter.formatApprovalIcon' }"
 											  iconInset="false"
+											  infoState="{= ${approverName} ? 'Success' : 'None' }"	
 											  description="{= ${approverName} ? ${approverName} : ${approvalResultText} }"/>
 						</List>
 					</IconTabFilter>
@@ -101,19 +102,10 @@
 			</IconTabBar>
 		</semantic:content>
 		<semantic:positiveAction>
-			<semantic:PositiveAction id="btnApprove" text="Approve" press="onApprove"/>
+			<semantic:PositiveAction id="btnApprove" text="Approve" press="onApprove" visible="{detailView>/approveMode}"/>
 		</semantic:positiveAction>
 		<semantic:negativeAction>
-			<semantic:NegativeAction id="btnReject" text="Reject" press="onReject"/>
+			<semantic:NegativeAction id="btnReject" text="Reject" press="onReject" visible="{detailView>/approveMode}"/>
 		</semantic:negativeAction>
-		<semantic:sendEmailAction>
-			<semantic:SendEmailAction id="shareEmail" press="onShareEmailPress"/>
-		</semantic:sendEmailAction>
-		<semantic:shareInJamAction>
-			<semantic:ShareInJamAction id="shareInJam" visible="{FLP>/isShareInJamActive}" press="onShareInJamPress"/>
-		</semantic:shareInJamAction>
-		<semantic:saveAsTileAction>
-			<footerbar:AddBookmarkButton id="shareTile" title="{detailView>/saveAsTileTitle}"/>
-		</semantic:saveAsTileAction>
 	</semantic:DetailPage>
 </mvc:View>

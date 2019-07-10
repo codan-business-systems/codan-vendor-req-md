@@ -56,6 +56,7 @@ sap.ui.define([
 				});
 
 				this.getRouter().getRoute("master").attachPatternMatched(this._onMasterMatched, this);
+				this.getRouter().getRoute("approve").attachPatternMatched(this._onApproveMatched, this);
 				this.getRouter().attachBypassed(this.onBypassed, this);
 			},
 
@@ -183,8 +184,29 @@ sap.ui.define([
 					title: this.getResourceBundle().getText("masterTitleCount", [0]),
 					noDataText: this.getResourceBundle().getText("masterListNoDataText"),
 					sortBy: "name1",
-					groupBy: "None"
+					groupBy: "None",
+					approveMode: false
 				});
+			},
+			
+			_bindList: function(bApproveMode) {
+				var sTarget = bApproveMode ? "approveObject" : "object";
+				this.getOwnerComponent().oListSelector.oWhenListLoadingIsDone.then(
+					function (mParams) {
+						if (mParams.list.getMode() === "None") {
+							return;
+						}
+						var sObjectId = mParams.firstListitem.getBindingContext().getProperty("id");
+						this.getRouter().navTo(sTarget, {objectId : sObjectId}, true);
+					}.bind(this),
+					function (mParams) {
+						if (mParams.error) {
+							return;
+						}
+						this.getRouter().getTargets().display("detailNoObjectsAvailable");
+					}.bind(this)
+				);	
+				
 			},
 
 			/**
@@ -194,21 +216,13 @@ sap.ui.define([
 			 * @private
 			 */
 			_onMasterMatched :  function() {
-				this.getOwnerComponent().oListSelector.oWhenListLoadingIsDone.then(
-					function (mParams) {
-						if (mParams.list.getMode() === "None") {
-							return;
-						}
-						var sObjectId = mParams.firstListitem.getBindingContext().getProperty("id");
-						this.getRouter().navTo("object", {objectId : sObjectId}, true);
-					}.bind(this),
-					function (mParams) {
-						if (mParams.error) {
-							return;
-						}
-						this.getRouter().getTargets().display("detailNoObjectsAvailable");
-					}.bind(this)
-				);
+				this.getModel("masterView").setProperty("/approveMode", false);
+				this._bindList(false);
+			},
+			
+			_onApproveMatched: function() {
+				this.getModel("masterView").setProperty("/approveMode", true);
+				this._bindList(true);
 			},
 
 			/**
@@ -218,8 +232,9 @@ sap.ui.define([
 			 * @private
 			 */
 			_showDetail : function (oItem) {
-				var bReplace = !Device.system.phone;
-				this.getRouter().navTo("object", {
+				var bReplace = !Device.system.phone,
+					sTarget = this.getModel("masterView").getProperty("/approveMode") ? "approveObject" : "object";
+				this.getRouter().navTo(sTarget, {
 					objectId : oItem.getBindingContext().getProperty("id")
 				}, bReplace);
 			},

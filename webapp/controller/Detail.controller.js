@@ -25,10 +25,12 @@ sap.ui.define([
 					selectedTab: "tab1",
 					editMode: false,
 					approvalResult: "",
-					decisionText: ""
+					decisionText: "",
+					approveMode: false
 				});
 
 				this.getRouter().getRoute("object").attachPatternMatched(this._onObjectMatched, this);
+				this.getRouter().getRoute("approveObject").attachPatternMatched(this._onApproveObjectMatched, this);
 
 				this.setModel(oViewModel, "detailView");
 
@@ -141,7 +143,7 @@ sap.ui.define([
 			 * @param {sap.ui.base.Event} oEvent pattern match event in route 'object'
 			 * @private
 			 */
-			_onObjectMatched : function (oEvent) {
+			_setupBinding : function (oEvent) {
 				this._sObjectId =  oEvent.getParameter("arguments").objectId;
 				this.getModel().metadataLoaded().then( function() {
 					var sObjectPath = this.getModel().createKey("Requests", {
@@ -149,6 +151,16 @@ sap.ui.define([
 					});
 					this._bindView("/" + sObjectPath);
 				}.bind(this));
+			},
+			
+			_onObjectMatched: function(oEvent) {
+				this.getModel("detailView").setProperty("/approveMode", false);
+				this._setupBinding(oEvent);
+			},
+			
+			_onApproveObjectMatched: function(oEvent) {
+				this.getModel("detailView").setProperty("/approveMode", true);
+				this._setupBinding(oEvent);
 			},
 
 			/**

@@ -109,8 +109,24 @@
 					]
 				},
 				{
+					"pattern": "approve",
+					"name": "approve",
+					"target": [
+						"object",
+						"master"
+					]
+				},
+				{
 					"pattern": "Requests/{objectId}",
 					"name": "object",
+					"target": [
+						"master",
+						"object"
+					]
+				},
+				{
+					"pattern": "approve/Requests/{objectId}",
+					"name": "approveObject",
 					"target": [
 						"master",
 						"object"

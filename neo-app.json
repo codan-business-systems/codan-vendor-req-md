@@ -44,7 +44,7 @@
       "path": "/sap/opu/odata",
       "target": {
         "type": "destination",
-        "name": "GATEWAY",
+        "name": "GD1",
         "entryPath": "/sap/opu/odata"
       },
       "description": "SAP Gateway"
