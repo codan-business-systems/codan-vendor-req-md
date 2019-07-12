@@ -4,10 +4,11 @@
 	<semantic:DetailPage id="page" navButtonPress="onNavBack" showNavButton="{device>/system/phone}" title="{i18n>detailTitle}"
 		busy="{detailView>/busy}" busyIndicatorDelay="{detailView>/delay}">
 		<semantic:content>
-			<ObjectHeader id="objectHeader" title="{name1}">
+			<ObjectHeader id="objectHeader" title="{name1}" number="Vendor ID: {vendorId}">
 				<attributes>
 					<ObjectAttribute id="abnAttribute" text="ABN/Tax Number: {abn}"/>
-					<ObjectAttribute id="vendorIdAttribute" visible="{existingVendor}" text="Vendor ID: {vendorId}"/>
+					<!--<ObjectAttribute id="vendorIdAttribute" visible="{existingVendor}" text="Vendor ID: {vendorId}"/>-->
+					<ObjectAttribute id="companyCodeAttribute" text="Company Code: {companyCode} ({companyCodeText})"/>
 				</attributes>
 			</ObjectHeader>
 			<IconTabBar id="iconTabBar" class="sapUiResponsiveContentPadding" selectedKey="{detailView>/selectedTab}">
@@ -15,7 +16,7 @@
 					<IconTabFilter id="iconTabBarFilter1" key="tab1" icon="sap-icon://hint" tooltip="{i18n>detailIconTabBarInfo}">
 						<Panel id="detailIconPanel">
 							<HBox width="100%">
-								<VBox width="50%">
+								<VBox width="100%">
 									<l:BlockLayout>
 										<l:BlockLayoutRow scrollable="false">
 											<l:BlockLayoutCell>
@@ -40,34 +41,6 @@
 											</l:BlockLayoutCell>
 										</l:BlockLayoutRow>
 									</l:BlockLayout>
-								</VBox>
-								<VBox width="50%" height="100%">
-									<!--<Panel id="orgAssignmentPanel" class="orgAssignmentPanel">-->
-									<Table id="orgAssignmentTable" items="{ToOrgAssignments}" class="sapUiSizeCompact" busyIndicatorDelay="{detailView>/tableBusyDelay}"
-										fixedLayout="false" width="auto" height="100%">
-										<!--<infoToolbar>
-								<Toolbar>
-									<Text text="{i18n>txtOrgAssignmentExplain}" visible="{detailView>/existingVendor}"/>
-									<Text text="" visible="{= !${detailView>/existingVendor} }"/>
-								</Toolbar>
-							</infoToolbar>-->
-										<headerToolbar>
-											<Toolbar>
-												<Title text="{i18n>txtCompanyCodes}"/>
-											</Toolbar>
-										</headerToolbar>
-										<columns>
-											<Column id="colCompanyCode"/>
-											<Column id="colStockProcurement"/>
-										</columns>
-										<items>
-											<ColumnListItem type="Inactive">
-												<ObjectIdentifier text="{companyCodeText} ({companyCode})"/>
-												<Switch state="{companyActive}" enabled="{detailView>/editMode}"/>
-											</ColumnListItem>
-										</items>
-									</Table>
-									<!--</Panel>-->
 								</VBox>
 							</HBox>
 						</Panel>
