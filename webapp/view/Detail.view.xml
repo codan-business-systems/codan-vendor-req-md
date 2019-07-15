@@ -51,7 +51,7 @@
 								   iconColor="{= ${status} === 'A' ? 'Positive' : 'Negative' }" tooltip="Approvals">
 						<List id="approvalsList" showSeparators="All" inset="true" items="{ToApprovals}">
 							<StandardListItem id="approvalListItems" title="{stepDescription}" 
-											  icon="{ parts:[{path:'{approvalResult}'}], formatter: '.formatter.formatApprovalIcon' }"
+											  icon="{ parts:[{path:'approvalResult'}], formatter: '.formatter.formatApprovalIcon' }"
 											  iconInset="false"
 											  infoState="{= ${approverName} ? 'Success' : 'None' }"	
 											  description="{= ${approverName} ? ${approverName} : ${approvalResultText} }"/>
