@@ -78,7 +78,7 @@ sap.ui.define([
 				var oCrossAppNavigator = sap.ushell.Container.getService("CrossApplicationNavigation");
 				var hash = (oCrossAppNavigator && oCrossAppNavigator.hrefForExternal({
 						target: {
-							semanticObject: "VendorReq",
+							semanticObject: "VendorRequest",
 							action: "display"
 						},
 						params: {

@@ -7,7 +7,6 @@
 			<ObjectHeader id="objectHeader" title="{name1}" number="Vendor ID: {vendorId}">
 				<attributes>
 					<ObjectAttribute id="abnAttribute" text="ABN/Tax Number: {abn}"/>
-					<!--<ObjectAttribute id="vendorIdAttribute" visible="{existingVendor}" text="Vendor ID: {vendorId}"/>-->
 					<ObjectAttribute id="companyCodeAttribute" text="Company Code: {companyCode} ({companyCodeText})"/>
 				</attributes>
 			</ObjectHeader>
