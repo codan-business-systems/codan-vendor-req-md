@@ -33,12 +33,7 @@
 			<List
 				id="list"
 				items="{
-					path: '/Requests',
-					sorter: {
-						path: 'name1',
-						descending: false
-						},
-					groupHeaderFactory: '.createGroupHeader'
+					path: '/Requests'
 				}"
 				busyIndicatorDelay="{masterView>/delay}"
 				noDataText="{masterView>/noDataText}"

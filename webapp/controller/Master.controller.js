@@ -222,6 +222,12 @@ sap.ui.define([
 			
 			_onApproveMatched: function() {
 				this.getModel("masterView").setProperty("/approveMode", true);
+				
+				this.getView().byId("list").getBinding("items").filter(new Filter({
+					path: "status",
+					operator: "EQ",
+					value1: "N"
+				}));
 				this._bindList(true);
 			},
 

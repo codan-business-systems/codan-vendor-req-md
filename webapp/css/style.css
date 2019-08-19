@@ -9,3 +9,10 @@
 .zErrorIcon {
 	color: gray;
 }
+
+.zDecisionLabel {
+	color: #000000;
+	font-size: 0.875rem;
+	font-family: Arial,Helvetica,sans-serif;
+	padding-top: 1rem;
+}

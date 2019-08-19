@@ -1,8 +1,37 @@
-<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core" xmlns:l="sap.ui.layout">
+<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core" xmlns:l="sap.ui.layout" xmlns:f="sap.ui.layout.form">
 <Dialog title="{i18n>dlgDecisionNotesTitle}" contentWidth="40rem" id="decisionTextDialog" showHeader="true">
 	<content>
 		<l:VerticalLayout width="100%">
 			<Text text="{= ${detailView>/approvalResult} === 'A' ? ${i18n>txtDialogDecisionText} : ${i18n>txtRejectDialogDecisionText} }" class="sapUiSmallMargin"/>
+			<f:SimpleForm visible="{= ${detailView>/financeApproval} &amp;&amp; ${detailView>/approvalResult} === 'A' &amp;&amp; !${existingVendor} }">
+				<f:content>
+					<Label labelFor="paymentTerms" required="true" text="Payment Terms" class="zDecisionLabel"/>
+					<ComboBox id="paymentTerms" items="{
+						path: '/ValueHelpResults',
+						filters: {
+							path: 'property',
+							operator: 'EQ',
+							value1: 'paymentTerms'
+						}
+					}" selectedKey="{detailView>/paymentTerms}">
+						<core:Item key="{key}" text="{key}: {value}"/>
+					</ComboBox>
+					
+					<Label labelFor="accountingClerk" required="false" text="Accounting Clerk" class="zDecisionLabel"/>
+					<ComboBox id="accountingClerk" items="{
+						path: '/ValueHelpResults',
+						filters: {
+							path: 'property',
+							operator: 'EQ',
+							value1: 'accountingClerk'
+						}
+					}" selectedKey="{detailView>/accountingClerk}">
+						<core:Item key="{key}" text="{key}: {value}"/>
+					</ComboBox>
+					
+				</f:content>
+			</f:SimpleForm>
+			
 			<TextArea width="100%" value="{detailView>/decisionText}" 
 			placeholder="{= ${detailView>/approvalResult} === 'A' ? ${i18n>txtApprovePlaceholder} : ${i18n>txtRejectionPlaceholder} }"/>
 		</l:VerticalLayout>
