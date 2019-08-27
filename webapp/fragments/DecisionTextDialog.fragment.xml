@@ -17,7 +17,7 @@
 						<core:Item key="{key}" text="{key}: {value}"/>
 					</ComboBox>
 					
-					<Label labelFor="accountingClerk" required="false" text="Accounting Clerk" class="zDecisionLabel"/>
+					<!--<Label labelFor="accountingClerk" required="false" text="Accounting Clerk" class="zDecisionLabel"/>
 					<ComboBox id="accountingClerk" items="{
 						path: '/ValueHelpResults',
 						filters: {
@@ -27,7 +27,7 @@
 						}
 					}" selectedKey="{detailView>/accountingClerk}">
 						<core:Item key="{key}" text="{key}: {value}"/>
-					</ComboBox>
+					</ComboBox>-->
 					
 				</f:content>
 			</f:SimpleForm>
