@@ -84,12 +84,9 @@ sap.ui.define([
 			var hash = (oCrossAppNavigator && oCrossAppNavigator.hrefForExternal({
 				target: {
 					semanticObject: "VendorRequest",
-					action: "display"
-				},
-				params: {
-					"id": this._sObjectId
+					action: "create"
 				}
-			}));
+			})) + "&/requests/" + this._sObjectId + "/" + this.getModel().getProperty(this._sObjectPath + "/companyCode");
 			oCrossAppNavigator.toExternal({
 				target: {
 					shellHash: hash
