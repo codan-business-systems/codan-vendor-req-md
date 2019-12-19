@@ -64,20 +64,20 @@
 									<Text text="Purch Org"/>
 								</Column>
 								<Column id="colOrgAssignCompActive" hAlign="Center">
-									<Text text="Extend to Company Code"/>
+									<Text text="Company Code Status"/>
 								</Column>
 								<Column id="colOrgAssignPurchActive" hAlign="Center">
-									<Text text="Extend to Purchase Org"/>
+									<Text text="Purchase Org Status"/>
 								</Column>
 							</columns>
 							<items>
 								<ColumnListItem>
 									<ObjectIdentifier title="{detailView>companyCodeText}"/>
-									<Text text="{detailView>companyCode}"/>
-									<Text text="{= ${detailView>purchOrg} || '&lt;N/A&gt;' }"/>
-									<CheckBox selected="{detailView>companyActive}" select="companyCodeSelected" enabled="{detailView>companyEditable}" tooltip="{detailView>companyMessage}"/>
-									<CheckBox selected="{detailView>purchOrgActive}" select="purchOrgSelected" enabled="{detailView>purchOrgEditable}" visible="{= !!${detailView>purchOrg} }"
+									<CheckBox text="{detailView>companyCode}" selected="{detailView>companyActive}" select="companyCodeSelected" enabled="{detailView>companyEditable}" tooltip="{detailView>companyMessage}"/>
+									<CheckBox text="{= ${detailView>purchOrg} || '&lt;N/A&gt;' }" selected="{detailView>purchOrgActive}" select="companyCodeSelected" enabled="{= ${detailView>purchOrgEditable} &amp;&amp; !!${detailView>purchOrg} }"
 									tooltip="{detailView>purchOrgMessage}"/>
+									<Text text="{detailView>companyMessage}"/>
+									<Text text="{detailView>purchOrgMessage}"/>
 								</ColumnListItem>
 							</items>
 						</Table>

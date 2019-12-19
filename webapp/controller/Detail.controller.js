@@ -35,16 +35,18 @@ sap.ui.define([
 				orgAssignments: [
 					/*
 						{
-							companyCode 		: string,
-							companyCodeText 	: string,
-							companyEditable		: boolean,
-							companyActive		: boolean,
-							purchOrg			: string,
-							purchOrgText		: string,
-							purchOrgEditable	: boolean,
-							purchOrgActive		: boolean,
-							companyMessage		: string,
-							purchOrgMessage		: string
+							companyCode 			: string,
+							companyCodeText 		: string,
+							companyEditable			: boolean,
+							companyActive			: boolean,
+							purchOrg				: string,
+							purchOrgText			: string,
+							purchOrgEditable		: boolean,
+							purchOrgActive			: boolean,
+							companyMessage			: string,
+							purchOrgMessage			: string,
+							originalCompanyActive	: boolean,
+							originalPurchOrgActive	: boolean
 						}
 					*/
 				]
@@ -312,7 +314,9 @@ sap.ui.define([
 							purchOrg: o.purchOrg,
 							purchOrgText: o.purchOrgText,
 							purchOrgActive: o.purchOrgActive,
-							purchOrgEditable: o.purchOrgStatus !== "X"
+							purchOrgEditable: o.purchOrgStatus !== "X",
+							originalCompanyActive: o.companyActive,
+							originalPurchOrgActive: o.purchOrgActive
 						};
 
 						that._calculateOrgAssignmentMessages(result, requestorCompCode);
@@ -366,6 +370,10 @@ sap.ui.define([
 				}
 			}
 
+		},
+		
+		companyCodeSelected: function(oEvent) {
+			this._calculateOrgAssignmentMessages(oEvent.getSource().getBindingContext("detailView").getObject());
 		}
 
 	});
