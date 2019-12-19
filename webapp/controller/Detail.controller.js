@@ -31,7 +31,23 @@ sap.ui.define([
 				approveMode: false,
 				financeApproval: false,
 				accountingClerk: "",
-				paymentTerms: ""
+				paymentTerms: "",
+				orgAssignments: [
+					/*
+						{
+							companyCode 		: string,
+							companyCodeText 	: string,
+							companyEditable		: boolean,
+							companyActive		: boolean,
+							purchOrg			: string,
+							purchOrgText		: string,
+							purchOrgEditable	: boolean,
+							purchOrgActive		: boolean,
+							companyMessage		: string,
+							purchOrgMessage		: string
+						}
+					*/
+				]
 			});
 
 			this.getRouter().getRoute("object").attachPatternMatched(this._onObjectMatched, this);
@@ -123,7 +139,7 @@ sap.ui.define([
 				MessageBox.alert("msgNoDecisionText");
 				return;
 			}
-			
+
 			if (result === "A") {
 				model.setProperty(this._sObjectPath + "/accountingClerk", detailModel.getProperty("/accountingClerk"));
 				model.setProperty(this._sObjectPath + "/paymentTerms", detailModel.getProperty("/paymentTerms"));
@@ -241,6 +257,27 @@ sap.ui.define([
 			});
 		},
 
+		_calculateOrgAssignmentMessages: function (o, compCode) {
+			
+			var requestorCompCode = compCode || this.getModel().getProperty(this._sObjectPath + "/companyCode");
+
+			if (!o.companyEditable) {
+				o.companyMessage = "Already extended";
+			} else if (o.companyActive) {
+				if (requestorCompCode === o.companyCode) {
+					o.companyMessage = "Requestor's Company Code";
+				} else {
+					o.companyMessage = "Will be extended";
+				}
+			}
+
+			if (!o.purchOrgEditable) {
+				o.purchOrgMessage = "Already extended";
+			} else if (o.purchOrgActive) {
+				o.purchOrgMessage = "Will be extended";
+			}
+		},
+
 		_onBindingChange: function () {
 			var oView = this.getView(),
 				oElementBinding = oView.getElementBinding();
@@ -255,20 +292,38 @@ sap.ui.define([
 			}
 
 			var sPath = oElementBinding.getPath(),
-				oResourceBundle = this.getResourceBundle(),
-				oObject = oView.getModel().getObject(sPath),
-				sObjectId = oObject.id,
-				sObjectName = oObject.name1,
-				oViewModel = this.getModel("detailView");
+				oViewModel = this.getModel("detailView"),
+				oModel = this.getModel(),
+				that = this;
 
 			this.getOwnerComponent().oListSelector.selectAListItem(sPath);
 
-			oViewModel.setProperty("/saveAsTileTitle", oResourceBundle.getText("shareSaveTileAppTitle", [sObjectName]));
-			oViewModel.setProperty("/shareOnJamTitle", sObjectName);
-			oViewModel.setProperty("/shareSendEmailSubject",
-				oResourceBundle.getText("shareSendEmailObjectSubject", [sObjectId]));
-			oViewModel.setProperty("/shareSendEmailMessage",
-				oResourceBundle.getText("shareSendEmailObjectMessage", [sObjectName, sObjectId, location.href]));
+			// Read the vendor assignments into the local model
+			this.getModel().read(this._sObjectPath + "/ToOrgAssignments", {
+				success: function (data) {
+					
+					var orgAssignments = data.results.map(function (o) {
+						var requestorCompCode = oModel.getProperty(that._sObjectPath + "/companyCode");
+						var result = {
+							companyCode: o.companyCode,
+							companyCodeText: o.companyCodeText,
+							companyActive: o.companyActive,
+							companyEditable: o.companyStatus !== "X",
+							purchOrg: o.purchOrg,
+							purchOrgText: o.purchOrgText,
+							purchOrgActive: o.purchOrgActive,
+							purchOrgEditable: o.purchOrgStatus !== "X"
+						};
+
+						that._calculateOrgAssignmentMessages(result, requestorCompCode);
+
+						return result;
+					});
+
+					oViewModel.setProperty("/orgAssignments", orgAssignments);
+				}
+			});
+
 		},
 
 		_onMetadataLoaded: function () {

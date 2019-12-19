@@ -51,6 +51,37 @@
 							<Link text="{i18n>txtLinkDisplayRequest}" press="navigateToReq"/>
 						</Panel>
 					</IconTabFilter>
+					<IconTabFilter id="iconTabOrgAssignment" key="tab7" icon="sap-icon://customer-order-entry" tooltip="Company Assignment">
+						<Table id="orgAssignmentList" items="{detailView>/orgAssignments}">
+							<columns>
+								<Column id="colOrgAssignCompDesc">
+									<Text text="Company"/>
+								</Column>
+								<Column id="colOrgAssignCompCode">
+									<Text text="Company Code"/>
+								</Column>
+								<Column id="colOrgAssignPurchOrg">
+									<Text text="Purch Org"/>
+								</Column>
+								<Column id="colOrgAssignCompActive" hAlign="Center">
+									<Text text="Extend to Company Code"/>
+								</Column>
+								<Column id="colOrgAssignPurchActive" hAlign="Center">
+									<Text text="Extend to Purchase Org"/>
+								</Column>
+							</columns>
+							<items>
+								<ColumnListItem>
+									<ObjectIdentifier title="{detailView>companyCodeText}"/>
+									<Text text="{detailView>companyCode}"/>
+									<Text text="{= ${detailView>purchOrg} || '&lt;N/A&gt;' }"/>
+									<CheckBox selected="{detailView>companyActive}" select="companyCodeSelected" enabled="{detailView>companyEditable}" tooltip="{detailView>companyMessage}"/>
+									<CheckBox selected="{detailView>purchOrgActive}" select="purchOrgSelected" enabled="{detailView>purchOrgEditable}" visible="{= !!${detailView>purchOrg} }"
+									tooltip="{detailView>purchOrgMessage}"/>
+								</ColumnListItem>
+							</items>
+						</Table>
+					</IconTabFilter>
 					<IconTabFilter id="iconTabQuestionnaire" key="tab2" icon="sap-icon://travel-request" tooltip="Questionnaire">
 						<List id="questionListMD" items="{ path: 'ToQuestions', filters: { path: 'status', operator: 'NE', value1: '' } }">
 							<CustomListItem class="questionnaireLI">
