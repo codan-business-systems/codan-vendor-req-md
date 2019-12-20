@@ -35,6 +35,7 @@ sap.ui.define([
 				orgAssignments: [
 					/*
 						{
+							id						: string,
 							companyCode 			: string,
 							companyCodeText 		: string,
 							companyEditable			: boolean,
@@ -146,6 +147,21 @@ sap.ui.define([
 				model.setProperty(this._sObjectPath + "/accountingClerk", detailModel.getProperty("/accountingClerk"));
 				model.setProperty(this._sObjectPath + "/paymentTerms", detailModel.getProperty("/paymentTerms"));
 			}
+			
+			// Check for changes to the Org Assignments and push them back into the model
+			var orgAssignmentChanges = detailModel.getProperty("/orgAssignments").filter(function(o) {
+				return o.originalCompanyActive !== o.companyActive || o.originalPurchOrgActive !== o.purchOrgActive;	
+			});
+			
+			orgAssignmentChanges.forEach(function(o) {
+				var key = model.createKey("/OrgAssignments", {
+					id: o.id,
+					companyCode : o.companyCode
+				});
+				
+				model.setProperty(key + "/companyActive", o.companyActive);
+				model.setProperty(key + "/purchOrgActive", o.purchOrgActive);
+			});
 
 			// Submit the changes before creating the approval
 			var changesUpdated = new Promise(function (res, rej) {
@@ -216,7 +232,7 @@ sap.ui.define([
 			oCommonModel.metadataLoaded().then(function () {
 				oCommonModel.read("/AppAuthorisations(application='VENDOR_REQ')", {
 					success: function (data) {
-						if (data.authorisation) {
+						if (data.authorisation !== "CREATE") {
 							oDetailModel.setProperty("/approveMode", true);
 							oDetailModel.setProperty("/financeApproval", data.authorisation === "FINANCE" || data.authorisation === "ADMIN");
 
@@ -307,6 +323,7 @@ sap.ui.define([
 					var orgAssignments = data.results.map(function (o) {
 						var requestorCompCode = oModel.getProperty(that._sObjectPath + "/companyCode");
 						var result = {
+							id: o.id,
 							companyCode: o.companyCode,
 							companyCodeText: o.companyCodeText,
 							companyActive: o.companyActive,
