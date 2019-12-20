@@ -12,11 +12,11 @@ sap.ui.define([
 			if (SLI.prototype.onAfterRendering) {
 				SLI.prototype.onAfterRendering.apply(this, arguments);
 			}
-			self = this;
-			this.$().find('.sapUiIcon').each(function() {
-				var iconClass = "z" + self.getInfoState() + "Icon";
+			var that = this;
+			this.$().find(".sapUiIcon").each(function() {
+				var iconClass = "z" + that.getInfoState() + "Icon";
 				$(this).addClass(iconClass);
-			})
+			});
 		}
 	});
 });

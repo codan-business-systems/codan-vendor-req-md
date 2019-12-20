@@ -136,7 +136,7 @@ sap.ui.define([
 				detailModel = this.getModel("detailView"),
 				result = detailModel.getProperty("/approvalResult"),
 				decisionText = detailModel.getProperty("/decisionText"),
-				approvalTypeText = result === 'A' ? "approved" : "rejected";
+				approvalTypeText = result === "A" ? "approved" : "rejected";
 
 			if (result !== "A" && !decisionText) {
 				MessageBox.alert("msgNoDecisionText");
