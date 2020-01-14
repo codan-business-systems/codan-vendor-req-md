@@ -75,9 +75,9 @@
 									<ObjectIdentifier title="{detailView>companyCodeText}"/>
 									<CheckBox text="{detailView>companyCode}" selected="{detailView>companyActive}" select="companyCodeSelected" enabled="{detailView>companyEditable}" tooltip="{detailView>companyMessage}"/>
 									<CheckBox text="{= ${detailView>purchOrg} || '&lt;N/A&gt;' }" selected="{detailView>purchOrgActive}" select="companyCodeSelected" enabled="{= ${detailView>purchOrgEditable} &amp;&amp; !!${detailView>purchOrg} }"
-									tooltip="{detailView>purchOrgMessage}"/>
+									tooltip="{detailView>purchOrgMessage}" visible="{= ${vendorType} !== 'E'}"/>
 									<Text text="{detailView>companyMessage}"/>
-									<Text text="{detailView>purchOrgMessage}"/>
+									<Text text="{detailView>purchOrgMessage}" visible="{= ${vendorType} !== 'E'}"/>
 								</ColumnListItem>
 							</items>
 						</Table>
