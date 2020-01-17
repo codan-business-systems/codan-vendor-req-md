@@ -1,5 +1,5 @@
 sap.ui.define([
-	"sap/ca/ui/model/format/FileSizeFormat",
+	"sap/ui/core/format/FileSizeFormat",
 	"sap/ui/core/ValueState"
 ], function (FSFormat, ValueState) {
 	"use strict";
