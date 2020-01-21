@@ -106,11 +106,8 @@ sap.ui.define([
 					action: "create"
 				}
 			})) + "&/requests/" + this._sObjectId + "/" + this.getModel().getProperty(this._sObjectPath + "/companyCode");
-			oCrossAppNavigator.toExternal({
-				target: {
-					shellHash: hash
-				}
-			});
+			
+			sap.m.URLHelper.redirect(window.location.href.split('#')[0] + hash, true);
 		},
 
 		onApprove: function () {
