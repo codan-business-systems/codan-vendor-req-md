@@ -216,6 +216,10 @@ sap.ui.define([
 			 * @private
 			 */
 			_onMasterMatched :  function() {
+				
+				if (window.location.hash.indexOf("approve") > -1) {
+					return;
+				}
 				this.getModel("masterView").setProperty("/approveMode", false);
 				this._bindList(false);
 			},
