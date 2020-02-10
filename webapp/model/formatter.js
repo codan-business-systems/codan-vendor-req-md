@@ -41,7 +41,7 @@ sap.ui.define([
 				return "sap-icon://message-warning";
 			}
 
-			return bankVerifiedWith ? "sap-icon://sys-enter" : "sap-icon://sys-cancel";
+			return bankVerifiedWith ? "sap-icon://sys-enter" : "sap-icon://cancel";
 
 		},
 
@@ -63,6 +63,49 @@ sap.ui.define([
 
 			return result;
 
+		},
+		
+		formatPaymentTermsMessage: function(paymentTerms, paymentTermsText, paymentTermsChanged) {
+			if (!paymentTermsChanged) {
+				return "No change requested";
+			}
+			switch(paymentTerms) {
+				case "":
+					return "No payment terms specified";
+				case "Z008":
+					return "Standard payment terms selected";
+				default:
+					return "Non-standard payment terms selected: " + paymentTerms + " (" + paymentTermsText + ")";
+			}
+		},
+		
+		formatPaymentTermsIcon: function(paymentTerms, paymentTermsChanged) {
+			
+			if (!paymentTermsChanged) {
+				return "sap-icon://cancel";
+			}
+			switch(paymentTerms) {
+				case "":
+					return "sap-icon://cancel";
+				case "Z008":
+					return "sap-icon://sys-enter";
+				default:
+					return "sap-icon://message-warning";
+			}
+		},
+		
+		formatPaymentTermsInfoState: function(paymentTerms, paymentTermsChanged) {
+			if (!paymentTermsChanged) {
+				return ValueState.None;
+			}
+			switch(paymentTerms) {
+				case "":
+					return ValueState.None;
+				case "Z008":
+					return ValueState.Success;
+				default:
+					return ValueState.Warning;
+			}	
 		},
 
 		yesNoResponseRequired: function (sResponseType) {
