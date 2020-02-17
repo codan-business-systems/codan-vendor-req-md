@@ -284,12 +284,16 @@ sap.ui.define([
 				} else {
 					o.companyMessage = "Will be extended";
 				}
+			} else {
+				o.companyMessage = "";
 			}
 
 			if (!o.purchOrgEditable) {
 				o.purchOrgMessage = "Already extended";
 			} else if (o.purchOrgActive) {
 				o.purchOrgMessage = "Will be extended";
+			} else {
+				o.purchOrgMessage = ""; 
 			}
 		},
 
