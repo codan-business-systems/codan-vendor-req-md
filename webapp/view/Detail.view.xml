@@ -88,7 +88,7 @@
 						</Table>
 					</IconTabFilter>
 					<IconTabFilter id="iconTabQuestionnaire" key="tab2" icon="sap-icon://travel-request" tooltip="Questionnaire">
-						<List id="questionListMD" items="{ path: 'ToQuestions', filters: { path: 'status', operator: 'NE', value1: '' } }">
+						<List id="questionListMD" items="{ path: 'ToQuestions', filters: { path: 'role', operator: 'EQ', value1: 'CREATE' }, parameters: { operationMode: 'Client' } }">
 							<CustomListItem class="questionnaireLI">
 								<Label text="{questionText}" required="{ parts: ['status'], formatter: '.formatter.questionMandatory' }" class="questionnaireRBGLabel"/>
 								<RadioButtonGroup selectedIndex="{ parts: ['yesNo'], formatter: '.formatter.yesNoSelectedIndex' }" select="questionnaireSelectionChange"
@@ -131,10 +131,10 @@
 			</IconTabBar>
 		</semantic:content>
 		<semantic:positiveAction>
-			<semantic:PositiveAction id="btnApprove" text="Approve" press="onApprove" visible="{detailView>/approveMode}"/>
+			<semantic:PositiveAction id="btnApprove" text="Approve" press="onApprove" visible="{canApprove}"/>
 		</semantic:positiveAction>
 		<semantic:negativeAction>
-			<semantic:NegativeAction id="btnReject" text="Reject" press="onReject" visible="{detailView>/approveMode}"/>
+			<semantic:NegativeAction id="btnReject" text="Reject" press="onReject" visible="{canApprove}"/>
 		</semantic:negativeAction>
 	</semantic:DetailPage>
 </mvc:View>

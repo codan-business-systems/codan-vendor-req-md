@@ -5,13 +5,17 @@ sap.ui.define([
 	"approve/req/vendor/codan/model/formatter",
 	"sap/m/MessageBox",
 	"sap/ui/model/Filter",
-	"sap/ui/model/FilterOperator"
-], function (BaseController, JSONModel, formatter, MessageBox, Filter, FilterOperator) {
+	"sap/ui/model/FilterOperator",
+	"sap/ui/core/ValueState",
+	"sap/m/MessageToast"
+], function (BaseController, JSONModel, formatter, MessageBox, Filter, FilterOperator, ValueState, MessageToast) {
 	"use strict";
 
 	return BaseController.extend("approve.req.vendor.codan.controller.Detail", {
 
 		formatter: formatter,
+
+		_authLevelLoaded: {}, //Promise to determine if the user's auth level has been loaded.
 
 		/* =========================================================== */
 		/* lifecycle methods                                           */
@@ -50,7 +54,12 @@ sap.ui.define([
 							originalPurchOrgActive	: boolean
 						}
 					*/
-				]
+				],
+				questions: [],
+				allQuestions: [],
+				approvalPhase: "CREATE",
+				authLevel: "CREATE",
+				me: "" //My SAP user ID
 			});
 
 			this.getRouter().getRoute("object").attachPatternMatched(this._onObjectMatched, this);
@@ -59,6 +68,22 @@ sap.ui.define([
 			this.setModel(oViewModel, "detailView");
 
 			this.getOwnerComponent().getModel().metadataLoaded().then(this._onMetadataLoaded.bind(this));
+
+			var oCommonModel = this.getOwnerComponent().getModel("common");
+
+			this._myUserIdLoaded = new Promise(function (res, rej) {
+				oCommonModel.metadataLoaded().then(function () {
+					oCommonModel.read("/EnvironmentInfos", {
+						success: function (data) {
+							oViewModel.setProperty("/me", data.results[0].userId);
+							res();
+						},
+						error: function (err) {
+							rej();
+						}
+					});
+				});
+			});
 		},
 
 		/* =========================================================== */
@@ -106,12 +131,20 @@ sap.ui.define([
 					action: "create"
 				}
 			})) + "&/requests/" + this._sObjectId + "/" + this.getModel().getProperty(this._sObjectPath + "/companyCode");
-			
+
 			sap.m.URLHelper.redirect(window.location.href.split('#')[0] + hash, true);
 		},
 
 		onApprove: function () {
-			this._showDecisionDialog("A");
+
+			// Check if we need to show the questionnaire dialog
+			var questionnaireComplete = this._checkForQuestionsAndDisplayDialog(),
+				that = this;
+
+			questionnaireComplete.then(function () {
+				that._showDecisionDialog("A");
+			});
+
 		},
 
 		onReject: function () {
@@ -144,18 +177,18 @@ sap.ui.define([
 				model.setProperty(this._sObjectPath + "/accountingClerk", detailModel.getProperty("/accountingClerk"));
 				model.setProperty(this._sObjectPath + "/paymentTerms", detailModel.getProperty("/paymentTerms"));
 			}
-			
+
 			// Check for changes to the Org Assignments and push them back into the model
-			var orgAssignmentChanges = detailModel.getProperty("/orgAssignments").filter(function(o) {
-				return o.originalCompanyActive !== o.companyActive || o.originalPurchOrgActive !== o.purchOrgActive;	
+			var orgAssignmentChanges = detailModel.getProperty("/orgAssignments").filter(function (o) {
+				return o.originalCompanyActive !== o.companyActive || o.originalPurchOrgActive !== o.purchOrgActive;
 			});
-			
-			orgAssignmentChanges.forEach(function(o) {
+
+			orgAssignmentChanges.forEach(function (o) {
 				var key = model.createKey("/OrgAssignments", {
 					id: o.id,
-					companyCode : o.companyCode
+					companyCode: o.companyCode
 				});
-				
+
 				model.setProperty(key + "/companyActive", o.companyActive);
 				model.setProperty(key + "/purchOrgActive", o.purchOrgActive);
 			});
@@ -212,6 +245,8 @@ sap.ui.define([
 					id: this._sObjectId
 				});
 				this._bindView("/" + sObjectPath);
+
+				this._setApprovalPhase();
 			}.bind(this));
 		},
 
@@ -226,17 +261,22 @@ sap.ui.define([
 			var oCommonModel = this.getOwnerComponent().getModel("common"),
 				oDetailModel = this.getModel("detailView");
 
-			oCommonModel.metadataLoaded().then(function () {
-				oCommonModel.read("/AppAuthorisations(application='VENDOR_REQ')", {
-					success: function (data) {
-						if (data.authorisation !== "CREATE") {
-							oDetailModel.setProperty("/approveMode", true);
-							oDetailModel.setProperty("/financeApproval", data.authorisation === "FINANCE" || data.authorisation === "ADMIN");
-
-						}
-					}
-				});
-			});
+			this._authLevelLoaded = Promise.all([oCommonModel.metadataLoaded(),
+				this._myUserIdLoaded,
+				new Promise(function (res, rej) {
+					oCommonModel.read("/AppAuthorisations(application='VENDOR_REQ')", {
+						success: function (data) {
+							if (data.authorisation !== "CREATE") {
+								oDetailModel.setProperty("/approveMode", true);
+								oDetailModel.setProperty("/financeApproval", data.authorisation === "FINANCE" || data.authorisation === "ADMIN");
+							}
+							oDetailModel.setProperty("/authLevel", data.authorisation);
+							res();
+						},
+						error: rej
+					});
+				})
+			]);
 
 			this._setupBinding(oEvent);
 
@@ -260,6 +300,9 @@ sap.ui.define([
 
 			this.getView().bindElement({
 				path: sObjectPath,
+				parameters: {
+					expand: "ToApprovals,ToQuestions"
+				},
 				events: {
 					change: this._onBindingChange.bind(this),
 					dataRequested: function () {
@@ -273,7 +316,7 @@ sap.ui.define([
 		},
 
 		_calculateOrgAssignmentMessages: function (o, compCode) {
-			
+
 			var requestorCompCode = compCode || this.getModel().getProperty(this._sObjectPath + "/companyCode");
 
 			if (!o.companyEditable) {
@@ -293,7 +336,7 @@ sap.ui.define([
 			} else if (o.purchOrgActive) {
 				o.purchOrgMessage = "Will be extended";
 			} else {
-				o.purchOrgMessage = ""; 
+				o.purchOrgMessage = "";
 			}
 		},
 
@@ -320,7 +363,7 @@ sap.ui.define([
 			// Read the vendor assignments into the local model
 			this.getModel().read(this._sObjectPath + "/ToOrgAssignments", {
 				success: function (data) {
-					
+
 					var orgAssignments = data.results.map(function (o) {
 						var requestorCompCode = oModel.getProperty(that._sObjectPath + "/companyCode");
 						var result = {
@@ -389,10 +432,174 @@ sap.ui.define([
 			}
 
 		},
-		
-		companyCodeSelected: function(oEvent) {
+
+		_setApprovalPhase: function () {
+
+			var model = this.getModel(),
+				detailModel = this.getModel("detailView"),
+				me = detailModel.getProperty("/me"),
+				approveMode = detailModel.getProperty("/approveMode"),
+				authLevel = "",
+				questionList = this.getView().byId("questionListMD"),
+				that = this;
+
+			// If I'm the creator of the requisition, the approval phase is always CREATE
+			this._authLevelLoaded.then(function () {
+				authLevel = detailModel.getProperty("/authLevel");
+				if (authLevel !== "ADMIN") {
+					if (!detailModel.getProperty("/approveMode") || model.getProperty(that._sObjectPath + "/createdBy") === me) {
+						authLevel = "CREATE";
+					}
+				}
+
+				detailModel.setProperty("/approvalPhase", authLevel);
+
+				if (questionList) {
+					questionList.getBinding("items").filter([]);
+					questionList.getBinding("items").refresh();
+					questionList.getBinding("items").filter(new Filter({
+						path: "role",
+						operator: approveMode ? "NE" : "EQ",
+						value1: authLevel
+					}));
+				}
+			});
+		},
+
+		companyCodeSelected: function (oEvent) {
 			this._calculateOrgAssignmentMessages(oEvent.getSource().getBindingContext("detailView").getObject());
-		}
+		},
+
+		_checkForQuestionsAndDisplayDialog: function () {
+			var questions = [],
+				that = this,
+				model = this.getModel(),
+				detailModel = this.getModel("detailView"),
+				modelQuestions = model.getProperty(this._sObjectPath + "/ToQuestions").map(function (q) {
+					return model.getProperty("/" + q);
+				});
+
+			return new Promise(function (res, rej) {
+				modelQuestions = modelQuestions.filter(function (q) {
+					return q.status && q.role !== "CREATE";
+				});
+				questions = modelQuestions.map(function (q) {
+					return Object.assign({
+						visible: !q.parentQuestion
+					}, q);
+				});
+				
+				detailModel.setProperty("/questions", questions);
+
+				if (questions.length === 0) {
+					res();
+				}
+
+				that._showQuestionsDialog(res, rej);
+			});
+
+		},
+
+		_showQuestionsDialog: function (onSuccess, onCancel) {
+
+			if (!this._oQuestionDialog) {
+				this._oQuestionDialog = sap.ui.xmlfragment("approve.req.vendor.codan.fragments.Questionnaire", this);
+				this.getView().addDependent(this._oQuestionDialog);
+			}
+
+			this._oQuestionDialog.attachAfterClose(function (event) {
+				if (event.getParameter("origin").getText() === "OK") {
+					onSuccess();
+				} else {
+					onCancel();
+				}
+			}, this);
+
+			this._oQuestionDialog.open();
+		},
+		
+		questionnaireOk: function (event) {
+			if (this.validateQuestionnaire()) {
+				this.closeQuestionnaireDialog(true);
+			}
+		},
+		
+		validateQuestionnaire: function (event) {
+			var list = sap.ui.getCore().byId("questionList"),
+				listItems = list.getItems(),
+				result = true;
+
+			listItems.forEach(function (l) {
+
+				var q = l.getBindingContext("detailView").getObject(),
+					rbg = l.getContent()[1],
+					txt = l.getContent()[2];
+
+				rbg.setValueState(ValueState.None);
+				txt.setValueState(ValueState.None);
+
+				if (formatter.questionMandatory(q.status)) {
+					if (!q.yesNo && formatter.yesNoResponseRequired(q.responseType)) {
+						rbg.setValueState(ValueState.Error);
+						result = false;
+					}
+
+					if (q.responseType === "TXT" && !q.responseText) {
+						txt.setValueState(ValueState.Error);
+						txt.setValueStateText("Response required");
+						result = false;
+					}
+
+				}
+
+				if (q.responseType === "YNT" && q.yesNo === "X" && !q.responseText) {
+					txt.setValueState(ValueState.Error);
+					txt.setValueStateText("Response required");
+					result = false;
+				}
+			});
+
+			return result;
+		},
+		
+		closeQuestionnaireDialog: function (bSilent) {
+			if (this._oQuestionDialog) {
+				this._oQuestionDialog.close();
+			}
+
+			if (!bSilent || typeof bSilent !== "boolean") {
+				MessageToast.show("Submission Cancelled", {
+					duration: 5000
+				});
+			}
+		},
+		
+		questionnaireSelectionChange: function (event) {
+			var sourcePath = event.getSource().getBindingContext("detailView").getPath(),
+				sourceQuestion = event.getSource().getBindingContext("detailView").getObject(),
+				newValue = event.getParameter("selectedIndex") === 1 ? "X" : "-",
+				model = this.getModel("detailView");
+
+			model.setProperty(sourcePath + "/yesNo", newValue);
+			if (event.getParameter("selectedIndex") !== 1) {
+				model.setProperty(sourcePath + "/responseText", "");
+			}
+			event.getSource().setValueState(ValueState.None);
+
+			// Check if any questions have this question as their parent
+			var children = model.getProperty("/questions").filter(function (o) {
+				return o.parentQuestion === sourceQuestion.questionId;
+			});
+
+			if (children.length > 0) {
+				children.forEach(function (o) {
+					o.visible = o.status && o.parentQuestionResponse === newValue;
+				});
+
+				sap.ui.getCore().byId("questionList").getBinding("items").refresh(true);
+			}
+		},
+
 
 	});
 
