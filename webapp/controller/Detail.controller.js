@@ -598,8 +598,7 @@ sap.ui.define([
 
 				sap.ui.getCore().byId("questionList").getBinding("items").refresh(true);
 			}
-		},
-
+		}
 
 	});
 
