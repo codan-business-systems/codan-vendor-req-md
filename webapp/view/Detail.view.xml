@@ -44,8 +44,8 @@
 													infoState="{= ${contactDetailChangeFlag} ? 'Success' : 'Error' }" iconInset="false"/>
 												<codan:ListItemWithColorIcon visible="{existingVendor}" id="addressListItem" title="Address"
 													description="{= ${addressChangeFlag} ? 'Change Requested' : 'No Change Requested' }"
-													icon="{= ${addressChangeFlag} ? 'sap-icon://sys-enter' : 'sap-icon://cancel' }"
-													infoState="{= ${addressChangeFlag} ? 'Success' : 'Error' }" iconInset="false"/>
+													icon="{= ${addressChangeFlag} ? 'sap-icon://sys-enter' : 'sap-icon://cancel' }" infoState="{= ${addressChangeFlag} ? 'Success' : 'Error' }"
+													iconInset="false"/>
 											</l:BlockLayoutCell>
 										</l:BlockLayoutRow>
 									</l:BlockLayout>
@@ -78,9 +78,11 @@
 							<items>
 								<ColumnListItem>
 									<ObjectIdentifier title="{detailView>companyCodeText}"/>
-									<CheckBox text="{detailView>companyCode}" selected="{detailView>companyActive}" select="companyCodeSelected" enabled="{detailView>companyEditable}" tooltip="{detailView>companyMessage}"/>
-									<CheckBox text="{= ${detailView>purchOrg} || '&lt;N/A&gt;' }" selected="{detailView>purchOrgActive}" select="companyCodeSelected" enabled="{= ${detailView>purchOrgEditable} &amp;&amp; !!${detailView>purchOrg} }"
-									tooltip="{detailView>purchOrgMessage}" visible="{= ${vendorType} !== 'E'}"/>
+									<CheckBox text="{detailView>companyCode}" selected="{detailView>companyActive}" select="companyCodeSelected"
+										enabled="{detailView>companyEditable}" tooltip="{detailView>companyMessage}"/>
+									<CheckBox text="{= ${detailView>purchOrg} || '&lt;N/A&gt;' }" selected="{detailView>purchOrgActive}" select="companyCodeSelected"
+										enabled="{= ${detailView>purchOrgEditable} &amp;&amp; !!${detailView>purchOrg} }" tooltip="{detailView>purchOrgMessage}"
+										visible="{= ${vendorType} !== 'E'}"/>
 									<Text text="{detailView>companyMessage}"/>
 									<Text text="{detailView>purchOrgMessage}" visible="{= ${vendorType} !== 'E'}"/>
 								</ColumnListItem>
@@ -88,21 +90,31 @@
 						</Table>
 					</IconTabFilter>
 					<IconTabFilter id="iconTabQuestionnaire" key="tab2" icon="sap-icon://travel-request" tooltip="Questionnaire">
-						<List id="questionListMD" items="{ path: 'ToQuestions', filters: { path: 'role', operator: 'EQ', value1: 'CREATE' }, parameters: { operationMode: 'Client' } }">
+						<List id="questionListMD"
+							items="{ path: 'ToQuestions', filters: { path: 'role', operator: 'EQ', value1: 'CREATE' }, parameters: { operationMode: 'Client' } }">
 							<CustomListItem class="questionnaireLI">
-								<Label text="{questionText}" required="{ parts: ['status'], formatter: '.formatter.questionMandatory' }" class="questionnaireRBGLabel"/>
-								<RadioButtonGroup selectedIndex="{ parts: ['yesNo'], formatter: '.formatter.yesNoSelectedIndex' }" select="questionnaireSelectionChange"
-									visible="{ parts: [ 'responseType' ], formatter: '.formatter.yesNoResponseRequired' }" columns="2" class="questionnaireRBG"
-									editable="false">
-									<buttons>
-										<RadioButton text="No"/>
-										<RadioButton text="Yes"/>
-									</buttons>
-								</RadioButtonGroup>
+								<HBox alignItems="Center">
+									<Label text="{questionText}" required="{ parts: ['status'], formatter: '.formatter.questionMandatory' }" class="questionnaireRBGLabel"/>
+									<core:Icon src="sap-icon://sys-help" tooltip="Additional Information" visible="{= !!${explainText} }" press="showExplainText"
+									class="questionnaireAdditionalInfo"/>
+									<HBox justifyContent="End" width="100%" visible="{= ${responseType} === 'CHK' }">
+										<CheckBox selected="{ parts: ['yesNo'], formatter: '.formatter.checkBoxSelected' }" select="questionnaireCheckBoxSelectionChange"
+											 editable="false" class="questionnaireCb"/>
+									</HBox>
+									<HBox justifyContent="End" class="questionnaire-right-aligned" visible="{= ${responseType} !== 'CHK' }">
+										<RadioButtonGroup selectedIndex="{ parts: ['yesNo'], formatter: '.formatter.yesNoSelectedIndex' }" select="questionnaireSelectionChange"
+											visible="{ parts: [ 'responseType' ], formatter: '.formatter.yesNoResponseRequired' }" columns="2" class="questionnaireRBG " 
+											editable="false">
+											<buttons>
+												<RadioButton text="No"/>
+												<RadioButton text="Yes"/>
+											</buttons>
+										</RadioButtonGroup>
+									</HBox>
+								</HBox>
 								<TextArea id="freeTextDetails" value="{responseText}" placeholder="Provide details"
-									visible="{ parts: [ 'responseType' ], formatter: '.formatter.responseTextVisible' }"
-									enabled="true" liveChange="updateQuestionnaireResponseText"
-									width="100%" editable="false"/>
+									visible="{ parts: [ 'responseType' ], formatter: '.formatter.responseTextVisible' }" enabled="true"
+									liveChange="updateQuestionnaireResponseText" width="100%" editable="false"/>
 							</CustomListItem>
 						</List>
 					</IconTabFilter>
@@ -120,12 +132,26 @@
 					</IconTabFilter>
 					<IconTabFilter id="iconTabAttachment" key="tab4" icon="sap-icon://attachment" tooltip="{i18n>detailIconTabBarAttachments}"
 						count="{attachmentCount}">
+						<UploadCollection id="attachments" multiple="false" items="{ToAttachments}" maximumFilenameLength="0" maximumFileSize="0"
+							change="changeAttachment" fileDeleted="deleteAttachment" uploadComplete="uploadComplete" noDataText="{i18n>txtNoAttachments}"
+							uploadEnabled="true" busy="{detailView>/attachmentsBusy}">
+							<items>
+								<UploadCollectionItem documentId="{attachmentId}" fileName="{fileName}" mimeType="{mimeType}" visibleEdit="false"
+									url="/sap/opu/odata/sap/z_vendor_req_srv/Attachments('{attachmentId}')/$value">
+									<attributes>
+										<ObjectAttribute title="File Size" text="{parts:[{path:'fileSize'}], formatter: '.formatter.formatAttachmentSize'}"/>
+										<ObjectAttribute title="Uploaded By" text="{createdByName}"/>
+									</attributes>
+								</UploadCollectionItem>
+							</items>
+						</UploadCollection>
+						<!-- Why did I do this?
 						<List id="attachmentsList" showSeparators="None" inset="true" items="{ToAttachments}" noDataText="{i18n>txtNoAttachments}">
-							<StandardListItem id="attachmentListItems" title="{description}"
+							<StandardListItem id="attachmentListItems" title="{fileName}"
 								icon="{parts:[{path:'mimeType'}], formatter:'sap.ui.core.IconPool.getIconForMimeType'}" iconInset="false"
 								description="{parts:[{path:'fileSize'}], formatter: '.formatter.formatAttachmentSize'}"
 								press="downloadAttachment" type="Active"/>
-						</List>
+						</List>-->
 					</IconTabFilter>
 				</items>
 			</IconTabBar>

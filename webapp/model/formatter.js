@@ -22,7 +22,7 @@ sap.ui.define([
 
 		formatAttachmentSize: function (f) {
 			var a = FSFormat.getInstance();
-			return a.format(f);
+			return a.format(Number(f));
 		},
 
 		formatApprovalIcon: function (approvalResult) {
@@ -64,52 +64,52 @@ sap.ui.define([
 			return result;
 
 		},
-		
-		formatPaymentTermsMessage: function(paymentTerms, paymentTermsText, paymentTermsChanged) {
+
+		formatPaymentTermsMessage: function (paymentTerms, paymentTermsText, paymentTermsChanged) {
 			if (!paymentTermsChanged) {
 				return "No change requested";
 			}
-			switch(paymentTerms) {
-				case "":
-					return "No payment terms specified";
-				case "Z008":
-					return "Standard payment terms selected";
-				default:
-					return "Non-standard payment terms selected: " + paymentTerms + " (" + paymentTermsText + ")";
+			switch (paymentTerms) {
+			case "":
+				return "No payment terms specified";
+			case "Z008":
+				return "Standard payment terms selected";
+			default:
+				return "Non-standard payment terms selected: " + paymentTerms + " (" + paymentTermsText + ")";
 			}
 		},
-		
-		formatPaymentTermsIcon: function(paymentTerms, paymentTermsChanged) {
-			
+
+		formatPaymentTermsIcon: function (paymentTerms, paymentTermsChanged) {
+
 			if (!paymentTermsChanged) {
 				return "sap-icon://cancel";
 			}
-			switch(paymentTerms) {
-				case "":
-					return "sap-icon://cancel";
-				case "Z008":
-					return "sap-icon://sys-enter";
-				default:
-					return "sap-icon://message-warning";
+			switch (paymentTerms) {
+			case "":
+				return "sap-icon://cancel";
+			case "Z008":
+				return "sap-icon://sys-enter";
+			default:
+				return "sap-icon://message-warning";
 			}
 		},
-		
-		formatPaymentTermsInfoState: function(paymentTerms, paymentTermsChanged) {
+
+		formatPaymentTermsInfoState: function (paymentTerms, paymentTermsChanged) {
 			if (!paymentTermsChanged) {
 				return ValueState.None;
 			}
-			switch(paymentTerms) {
-				case "":
-					return ValueState.None;
-				case "Z008":
-					return ValueState.Success;
-				default:
-					return ValueState.Warning;
-			}	
+			switch (paymentTerms) {
+			case "":
+				return ValueState.None;
+			case "Z008":
+				return ValueState.Success;
+			default:
+				return ValueState.Warning;
+			}
 		},
 
 		yesNoResponseRequired: function (sResponseType) {
-			return sResponseType.indexOf("YN") > -1;
+			return sResponseType.indexOf("Y") > -1 && sResponseType.indexOf("N") > -1;
 		},
 
 		questionMandatory: function (sStatus) {
@@ -121,7 +121,16 @@ sap.ui.define([
 		},
 
 		responseTextEnabled: function (sResponseType, sYesNo) {
-			return sResponseType === "TXT" || sResponseType.indexOf("T") > -1 && sYesNo === "X";
+			switch (sResponseType) {
+			case "TXT":
+				return true;
+			case "YNT":
+				return sYesNo === "X";
+			case "NYT":
+				return sYesNo === "-";
+			default:
+				return false;
+			}
 		},
 
 		yesNoSelectedIndex: function (sYesNo) {
@@ -129,7 +138,11 @@ sap.ui.define([
 				return -1;
 			}
 			return sYesNo === "X" ? 1 : 0;
-		}
+		},
+
+		checkBoxSelected: function (sYesNo) {
+			return sYesNo === "X";
+		},
 	};
 
 });

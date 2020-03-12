@@ -16,6 +16,8 @@ sap.ui.define([
 		formatter: formatter,
 
 		_authLevelLoaded: {}, //Promise to determine if the user's auth level has been loaded.
+		
+		_oQuestionExplainTextPopover: {},
 
 		/* =========================================================== */
 		/* lifecycle methods                                           */
@@ -84,6 +86,9 @@ sap.ui.define([
 					});
 				});
 			});
+			
+			this._oQuestionExplainTextPopover = sap.ui.xmlfragment("approve.req.vendor.codan.fragments.QuestionExplainTextPopover", this);
+			this.getView().addDependent(this._oQuestionExplainTextPopover);
 		},
 
 		/* =========================================================== */
@@ -598,7 +603,22 @@ sap.ui.define([
 
 				sap.ui.getCore().byId("questionList").getBinding("items").refresh(true);
 			}
-		}
+		},
+		
+		deleteAttachment: function (oEvent) {
+			this.getModel().remove("/Attachments('" + oEvent.getParameter("documentId") + "')", {
+				success: function (data) {
+					sap.m.MessageToast.show(this.getResourceBundle().getText("msgAttachmentDeleted"), {
+						duration: 5000
+					});
+				}.bind(this)
+			});
+		},
+		
+		showExplainText: function(event) {
+			this._oQuestionExplainTextPopover.bindElement(event.getSource().getBindingContext().getPath());
+			this._oQuestionExplainTextPopover.openBy(event.getSource());
+		},
 
 	});
 
