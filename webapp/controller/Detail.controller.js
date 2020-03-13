@@ -498,6 +498,7 @@ sap.ui.define([
 
 				if (questions.length === 0) {
 					res();
+					return;
 				}
 
 				that._showQuestionsDialog(res, rej);
@@ -532,19 +533,36 @@ sap.ui.define([
 		validateQuestionnaire: function (event) {
 			var list = sap.ui.getCore().byId("questionList"),
 				listItems = list.getItems(),
-				result = true;
+				result = true,
+				that = this;
 
 			listItems.forEach(function (l) {
 
 				var q = l.getBindingContext("detailView").getObject(),
-					rbg = l.getContent()[1],
+					rbg = "",
+				
+					findInput = function(i) {
+						if (i.getValueState && i.getVisible && i.getVisible()) {
+							rbg = i;
+							return true;
+						}
+						
+						return i.getItems && i.getItems().find(findInput);
+					},
+				
+					// Find the radio button group or checkbox 
 					txt = l.getContent()[2];
+				
+				if (l.getContent().find(findInput)) {
+					rbg.setValueState(ValueState.None);
+				}
+				
+				if (txt) {
+					txt.setValueState(ValueState.None);
+				}
 
-				rbg.setValueState(ValueState.None);
-				txt.setValueState(ValueState.None);
-
-				if (formatter.questionMandatory(q.status)) {
-					if (!q.yesNo && formatter.yesNoResponseRequired(q.responseType)) {
+				if (that.formatter.questionMandatory(q.status)) {
+					if (!q.yesNo && (that.formatter.yesNoResponseRequired(q.responseType) || q.responseType === "CHK")) {
 						rbg.setValueState(ValueState.Error);
 						result = false;
 					}
@@ -557,7 +575,7 @@ sap.ui.define([
 
 				}
 
-				if (q.responseType === "YNT" && q.yesNo === "X" && !q.responseText) {
+				if (formatter.responseTextEnabled(q.responseType, q.yesNo) && !q.responseText) {
 					txt.setValueState(ValueState.Error);
 					txt.setValueStateText("Response required");
 					result = false;
@@ -619,6 +637,11 @@ sap.ui.define([
 			this._oQuestionExplainTextPopover.bindElement(event.getSource().getBindingContext().getPath());
 			this._oQuestionExplainTextPopover.openBy(event.getSource());
 		},
+		
+		questionnaireCheckBoxSelectionChange: function (event) {
+			this.getModel("detailView").setProperty(event.getSource().getBindingContext("detailView").getPath()	+ "/yesNo", event.getParameter("selected") ? "X" : " ");
+			event.getSource().setValueState(ValueState.None);
+		}
 
 	});
 
