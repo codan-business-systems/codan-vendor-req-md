@@ -1,12 +1,18 @@
 sap.ui.define([
 	"sap/m/StandardListItem",
-	"sap/m/StandardListItemRenderer"
-], function(SLI, SLIR) {
+	"sap/m/StandardListItemRenderer",
+	"approve/req/vendor/codan/control/ListItemWithColorIconRenderer"
+], function(SLI, SLIR, LIR) {
 	"use strict";
 	
 	return SLI.extend("approve.req.vendor.codan.control.ListItemWithColorIcon", {
+		metadata: {
+			properties: {
+				"additionalInfo": "string"
+			}
+		},
 		renderer: function(oRm, oControl) {
-			SLIR.render(oRm, oControl);
+			LIR.render(oRm, oControl);
 		},
 		onAfterRendering: function() {
 			if (SLI.prototype.onAfterRendering) {

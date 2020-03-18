@@ -30,10 +30,11 @@
 													infoState="{ parts:[{path:'bankVerifiedWith'}, {path:'newBankNumber'}], formatter: '.formatter.formatBankDetailsInfoState' }"
 													iconInset="false"/>
 												<codan:ListItemWithColorIcon id="standardPaymentTermsItem" title="Payment Terms"
-													description="{ parts: [{path:'paymentTerms'}, {path: 'paymentTermsText'}, {path: 'paymentTermsChangeFlag'}], formatter: '.formatter.formatPaymentTermsMessage' }"
-													icon="{ parts: [{path:'paymentTerms'}, {path: 'paymentTermsChangeFlag'}], formatter: '.formatter.formatPaymentTermsIcon' }"
-													infoState="{ parts: [{path:'paymentTerms'}, {path: 'paymentTermsChangeFlag'}], formatter: '.formatter.formatPaymentTermsInfoState' }"
-													iconInset="false"/>
+													description="{ parts: [{path:'paymentTerms'}, {path: 'paymentTermsText'}, {path: 'paymentTermsChangeFlag'}, {path: 'paymentTermsJustificationText'}], 
+																formatter: '.formatter.formatPaymentTermsMessage' }"
+													icon="{ parts: [{path:'paymentTerms'}, {path: 'paymentTermsChangeFlag'}, {path: 'paymentTermsWarning'}], formatter: '.formatter.formatPaymentTermsIcon' }"
+													infoState="{ parts: [{path:'paymentTerms'}, {path: 'paymentTermsChangeFlag'}, {path: 'paymentTermsWarning'}], formatter: '.formatter.formatPaymentTermsInfoState' }"
+													iconInset="false" additionalInfo="{paymentTermsJustificationText}"/>
 												<codan:ListItemWithColorIcon visible="{existingVendor}" id="paymentMethodsListItem" title="Payment Methods"
 													description="{= ${paymentMethodsChangeFlag} ? 'Change Requested' : 'No Change Requested' }"
 													icon="{= ${paymentMethodsChangeFlag} ? 'sap-icon://sys-enter' : 'sap-icon://cancel' }"
