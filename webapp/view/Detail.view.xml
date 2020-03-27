@@ -57,7 +57,8 @@
 							<Link text="{i18n>txtLinkDisplayRequest}" press="navigateToReq"/>
 						</Panel>
 					</IconTabFilter>
-					<IconTabFilter id="iconTabOrgAssignment" key="tab7" icon="sap-icon://customer-order-entry" tooltip="Company Assignment">
+					<IconTabFilter id="iconTabOrgAssignment" key="tab7" icon="sap-icon://customer-order-entry" tooltip="Company Assignment"
+						visible="{detailView>/approveMode}">
 						<Table id="orgAssignmentList" items="{detailView>/orgAssignments}">
 							<columns>
 								<Column id="colOrgAssignCompDesc">
@@ -90,7 +91,7 @@
 							</items>
 						</Table>
 					</IconTabFilter>
-					<IconTabFilter id="iconTabQuestionnaire" key="tab2" icon="sap-icon://travel-request" tooltip="Questionnaire">
+					<IconTabFilter id="iconTabQuestionnaire" key="tab2" icon="sap-icon://travel-request" tooltip="Questionnaire" visible="{detailView>/approveMode}">
 						<List id="questionListMD"
 							items="{ path: 'ToQuestions', filters: { path: 'role', operator: 'EQ', value1: 'CREATE' }, parameters: { operationMode: 'Client' } }">
 							<CustomListItem class="questionnaireLI">
