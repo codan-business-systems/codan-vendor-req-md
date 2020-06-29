@@ -38,6 +38,7 @@ sap.ui.define([
 				financeApproval: false,
 				accountingClerk: "",
 				paymentTerms: "",
+				searchTerm: "",
 				orgAssignments: [
 					/*
 						{
@@ -172,6 +173,12 @@ sap.ui.define([
 				result = detailModel.getProperty("/approvalResult"),
 				decisionText = detailModel.getProperty("/decisionText"),
 				approvalTypeText = result === "A" ? "approved" : "rejected";
+				
+			if (!detailModel.getProperty("/searchTerm")) {
+				var searchTerm = sap.ui.getCore().byId("searchTerm");
+				searchTerm.setValueState(ValueState.Error);
+				return;
+			}
 
 			if (result !== "A" && !decisionText) {
 				MessageBox.alert("msgNoDecisionText");
@@ -181,6 +188,7 @@ sap.ui.define([
 			if (result === "A") {
 				model.setProperty(this._sObjectPath + "/accountingClerk", detailModel.getProperty("/accountingClerk"));
 				model.setProperty(this._sObjectPath + "/paymentTerms", detailModel.getProperty("/paymentTerms"));
+				model.setProperty(this._sObjectPath + "/searchTerm", detailModel.getProperty("/searchTerm"));
 			}
 
 			// Check for changes to the Org Assignments and push them back into the model
@@ -273,7 +281,7 @@ sap.ui.define([
 						success: function (data) {
 							if (data.authorisation !== "CREATE") {
 								oDetailModel.setProperty("/approveMode", true);
-								oDetailModel.setProperty("/financeApproval", data.authorisation === "FINANCE" || data.authorisation === "ADMIN");
+								oDetailModel.setProperty("/financeApproval", data.authorisation === "AP" || data.authorisation === "ADMIN");
 							}
 							oDetailModel.setProperty("/authLevel", data.authorisation);
 							res();
@@ -417,6 +425,7 @@ sap.ui.define([
 			model.setProperty("/approvalResult", sDecision);
 			model.setProperty("/accountingClerk", this.getModel().getProperty(this._sObjectPath + "/accountingClerk"));
 			model.setProperty("/paymentTerms", this.getModel().getProperty(this._sObjectPath + "/paymentTerms"));
+			model.setProperty("/searchTerm", this.getModel().getProperty(this._sObjectPath + "/searchTerm"));
 
 			if (!this._oDecisionDialog) {
 				this._oDecisionDialog = sap.ui.xmlfragment("approve.req.vendor.codan.fragments.DecisionTextDialog", this);
@@ -424,6 +433,8 @@ sap.ui.define([
 			}
 
 			this._oDecisionDialog.open();
+			
+			sap.ui.getCore().byId("searchTerm").setValueState(ValueState.None); 
 
 			if (sDecision === "A") {
 				var oClerk = sap.ui.getCore().byId("accountingClerk");

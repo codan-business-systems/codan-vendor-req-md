@@ -21,6 +21,9 @@
 											<l:BlockLayoutCell>
 												<codan:ListItemWithColorIcon visible="{= !${existingVendor} }" id="newVendorListItem" title="New Vendor" icon="sap-icon://alert"
 													infoState="Error" iconInset="false"/>
+												<codan:ListItemWithColorIcon visible="{= ${existingVendor} &amp;&amp; ${vendorDeletionFlag} }" id="deletedVendorListItem" title="Deleted Vendor" 
+													icon="sap-icon://alert" description="Vendor has deletion flag set"
+													infoState="Warning" iconInset="false"/>
 												<!--icon="{= !!${bankVerifiedWith} ? 'sap-icon://sys-enter' : 'sap-icon://sys-cancel' }"-->
 												<!--infoState="{= !!${bankVerifiedWith} ? 'Success' : 'Error' }"-->
 												<!--description="{= !!${bankVerifiedWith} ? 'Entered and Verified With: ' + ${bankVerifiedWith} : 'Not Provided' }"-->
@@ -58,7 +61,7 @@
 						</Panel>
 					</IconTabFilter>
 					<IconTabFilter id="iconTabOrgAssignment" key="tab7" icon="sap-icon://customer-order-entry" tooltip="Company Assignment"
-						visible="{detailView>/approveMode}">
+						visible="{= ${detailView>/authLevel} === 'AP' || ${detailView>/authLevel} === 'ADMIN' }">
 						<Table id="orgAssignmentList" items="{detailView>/orgAssignments}">
 							<columns>
 								<Column id="colOrgAssignCompDesc">

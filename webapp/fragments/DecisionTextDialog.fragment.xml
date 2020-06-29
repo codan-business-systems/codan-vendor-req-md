@@ -3,7 +3,7 @@
 	<content>
 		<l:VerticalLayout width="100%">
 			<Text text="{= ${detailView>/approvalResult} === 'A' ? ${i18n>txtDialogDecisionText} : ${i18n>txtRejectDialogDecisionText} }" class="sapUiSmallMargin"/>
-			<f:SimpleForm visible="{= ${detailView>/financeApproval} &amp;&amp; ${detailView>/approvalResult} === 'A' &amp;&amp; !${existingVendor} }">
+			<f:SimpleForm visible="{= ${detailView>/financeApproval} &amp;&amp; ${detailView>/approvalResult} === 'A' }">
 				<f:content>
 					<Label labelFor="paymentTerms" required="true" text="Payment Terms" class="zDecisionLabel"/>
 					<ComboBox id="paymentTerms" items="{
@@ -16,6 +16,9 @@
 					}" selectedKey="{detailView>/paymentTerms}">
 						<core:Item key="{key}" text="{key}: {value}"/>
 					</ComboBox>
+					
+					<Label labelFor="searchTerm" required="true" text="Search Term" class="zDecisionLabel"/>
+					<Input id="searchTerm" value="{searchTerm}" maxLength="10" valueStateText="Enter a Search Term"/>
 					
 					<!--<Label labelFor="accountingClerk" required="false" text="Accounting Clerk" class="zDecisionLabel"/>
 					<ComboBox id="accountingClerk" items="{
