@@ -18,7 +18,7 @@
 					</ComboBox>
 					
 					<Label labelFor="searchTerm" required="true" text="Search Term" class="zDecisionLabel"/>
-					<Input id="searchTerm" value="{searchTerm}" maxLength="10" valueStateText="Enter a Search Term"/>
+					<Input id="searchTerm" value="{detailView>/searchTerm}" maxLength="10" valueStateText="Enter a Search Term"/>
 					
 					<!--<Label labelFor="accountingClerk" required="false" text="Accounting Clerk" class="zDecisionLabel"/>
 					<ComboBox id="accountingClerk" items="{
