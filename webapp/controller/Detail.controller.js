@@ -16,7 +16,7 @@ sap.ui.define([
 		formatter: formatter,
 
 		_authLevelLoaded: {}, //Promise to determine if the user's auth level has been loaded.
-		
+
 		_oQuestionExplainTextPopover: {},
 
 		/* =========================================================== */
@@ -35,6 +35,7 @@ sap.ui.define([
 				approvalResult: "",
 				decisionText: "",
 				approveMode: false,
+				errorsMode: false,
 				financeApproval: false,
 				accountingClerk: "",
 				paymentTerms: "",
@@ -67,6 +68,7 @@ sap.ui.define([
 
 			this.getRouter().getRoute("object").attachPatternMatched(this._onObjectMatched, this);
 			this.getRouter().getRoute("approveObject").attachPatternMatched(this._onApproveObjectMatched, this);
+			this.getRouter().getRoute("errorsObject").attachPatternMatched(this._onErrorsObjectMatched, this);
 
 			this.setModel(oViewModel, "detailView");
 
@@ -87,7 +89,7 @@ sap.ui.define([
 					});
 				});
 			});
-			
+
 			this._oQuestionExplainTextPopover = sap.ui.xmlfragment("approve.req.vendor.codan.fragments.QuestionExplainTextPopover", this);
 			this.getView().addDependent(this._oQuestionExplainTextPopover);
 		},
@@ -143,6 +145,11 @@ sap.ui.define([
 
 		onApprove: function () {
 
+			if (this.getModel("detailView").getProperty("/errorsMode")) {
+				this.resubmitRequest();
+				return;
+			}
+
 			// Check if we need to show the questionnaire dialog
 			var questionnaireComplete = this._checkForQuestionsAndDisplayDialog(),
 				that = this;
@@ -154,6 +161,11 @@ sap.ui.define([
 		},
 
 		onReject: function () {
+			if (this.getModel("detailView").getProperty("/errorsMode")) {
+				this.deleteRequest();
+				return;
+			}
+
 			this._showDecisionDialog("R");
 		},
 
@@ -173,7 +185,7 @@ sap.ui.define([
 				result = detailModel.getProperty("/approvalResult"),
 				decisionText = detailModel.getProperty("/decisionText"),
 				approvalTypeText = result === "A" ? "approved" : "rejected";
-				
+
 			if (!detailModel.getProperty("/searchTerm")) {
 				var searchTerm = sap.ui.getCore().byId("searchTerm");
 				searchTerm.setValueState(ValueState.Error);
@@ -293,6 +305,11 @@ sap.ui.define([
 
 			this._setupBinding(oEvent);
 
+		},
+
+		_onErrorsObjectMatched: function (oEvent) {
+			this._onApproveObjectMatched(oEvent);
+			this.getModel("detailView").setProperty("/errorsMode", true);
 		},
 
 		/**
@@ -433,8 +450,8 @@ sap.ui.define([
 			}
 
 			this._oDecisionDialog.open();
-			
-			sap.ui.getCore().byId("searchTerm").setValueState(ValueState.None); 
+
+			sap.ui.getCore().byId("searchTerm").setValueState(ValueState.None);
 
 			if (sDecision === "A") {
 				var oClerk = sap.ui.getCore().byId("accountingClerk");
@@ -504,7 +521,7 @@ sap.ui.define([
 						visible: !q.parentQuestion
 					}, q);
 				});
-				
+
 				detailModel.setProperty("/questions", questions);
 
 				if (questions.length === 0) {
@@ -534,13 +551,13 @@ sap.ui.define([
 
 			this._oQuestionDialog.open();
 		},
-		
+
 		questionnaireOk: function (event) {
 			if (this.validateQuestionnaire()) {
 				this.closeQuestionnaireDialog(true);
 			}
 		},
-		
+
 		validateQuestionnaire: function (event) {
 			var list = sap.ui.getCore().byId("questionList"),
 				listItems = list.getItems(),
@@ -551,23 +568,23 @@ sap.ui.define([
 
 				var q = l.getBindingContext("detailView").getObject(),
 					rbg = "",
-				
-					findInput = function(i) {
+
+					findInput = function (i) {
 						if (i.getValueState && i.getVisible && i.getVisible()) {
 							rbg = i;
 							return true;
 						}
-						
+
 						return i.getItems && i.getItems().find(findInput);
 					},
-				
+
 					// Find the radio button group or checkbox 
 					txt = l.getContent()[2];
-				
+
 				if (l.getContent().find(findInput)) {
 					rbg.setValueState(ValueState.None);
 				}
-				
+
 				if (txt) {
 					txt.setValueState(ValueState.None);
 				}
@@ -595,7 +612,7 @@ sap.ui.define([
 
 			return result;
 		},
-		
+
 		closeQuestionnaireDialog: function (bSilent) {
 			if (this._oQuestionDialog) {
 				this._oQuestionDialog.close();
@@ -607,7 +624,7 @@ sap.ui.define([
 				});
 			}
 		},
-		
+
 		questionnaireSelectionChange: function (event) {
 			var sourcePath = event.getSource().getBindingContext("detailView").getPath(),
 				sourceQuestion = event.getSource().getBindingContext("detailView").getObject(),
@@ -633,7 +650,7 @@ sap.ui.define([
 				sap.ui.getCore().byId("questionList").getBinding("items").refresh(true);
 			}
 		},
-		
+
 		deleteAttachment: function (oEvent) {
 			this.getModel().remove("/Attachments('" + oEvent.getParameter("documentId") + "')", {
 				success: function (data) {
@@ -643,15 +660,56 @@ sap.ui.define([
 				}.bind(this)
 			});
 		},
-		
-		showExplainText: function(event) {
+
+		showExplainText: function (event) {
 			this._oQuestionExplainTextPopover.bindElement(event.getSource().getBindingContext().getPath());
 			this._oQuestionExplainTextPopover.openBy(event.getSource());
 		},
-		
+
 		questionnaireCheckBoxSelectionChange: function (event) {
-			this.getModel("detailView").setProperty(event.getSource().getBindingContext("detailView").getPath()	+ "/yesNo", event.getParameter("selected") ? "X" : " ");
+			this.getModel("detailView").setProperty(event.getSource().getBindingContext("detailView").getPath() + "/yesNo", event.getParameter(
+				"selected") ? "X" : " ");
 			event.getSource().setValueState(ValueState.None);
+		},
+
+		resubmitRequest: function () {
+
+			this.getModel().callFunction("/ResubmitRequest", {
+				urlParameters: {
+					"id": this.getModel().getProperty(this._sObjectPath + "/id")
+				},
+				success: function () {
+					MessageToast.show("Request resubmitted", {
+						duration: 8000
+					});
+
+				}
+			});
+
+		},
+
+		deleteRequest: function () {
+			
+			var that = this;
+
+			MessageBox.confirm("Are you sure you want to delete the request?", {
+				title: "Data loss confirmation",
+				onClose: function (sAction) {
+					var oModel = that.getModel();
+
+					oModel.setProperty(that._sObjectPath + "/deleted", true);
+
+					oModel.submitChanges({
+						success: function () {
+							MessageToast.show("Request deleted", {
+								duration: 8000
+							});
+
+						}
+					})
+				}
+			})
+
 		}
 
 	});

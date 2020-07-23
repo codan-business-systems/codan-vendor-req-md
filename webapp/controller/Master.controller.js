@@ -57,6 +57,7 @@ sap.ui.define([
 
 				this.getRouter().getRoute("master").attachPatternMatched(this._onMasterMatched, this);
 				this.getRouter().getRoute("approve").attachPatternMatched(this._onApproveMatched, this);
+				this.getRouter().getRoute("errors").attachPatternMatched(this._onErrorsMatched, this); 
 				this.getRouter().attachBypassed(this.onBypassed, this);
 			},
 
@@ -170,6 +171,19 @@ sap.ui.define([
 					});
 				}
 			},
+			
+			getNavigationTarget: function() {
+				var model = this.getModel("masterView");
+				
+				if (model.getProperty("/errorsMode")) {
+					var sTarget = "errorsObject";
+				} else {
+					sTarget = model.getProperty("/approveMode") ? "approveObject" : "object";
+				}
+				
+				return sTarget;
+				
+			},
 
 			/* =========================================================== */
 			/* begin: internal methods                                     */
@@ -190,14 +204,13 @@ sap.ui.define([
 			},
 			
 			_bindList: function(bApproveMode) {
-				var sTarget = bApproveMode ? "approveObject" : "object";
 				this.getOwnerComponent().oListSelector.oWhenListLoadingIsDone.then(
 					function (mParams) {
 						if (mParams.list.getMode() === "None") {
 							return;
 						}
 						var sObjectId = mParams.firstListitem.getBindingContext().getProperty("id");
-						this.getRouter().navTo(sTarget, {objectId : sObjectId}, true);
+						this.getRouter().navTo(this.getNavigationTarget(), {objectId : sObjectId}, true);
 					}.bind(this),
 					function (mParams) {
 						if (mParams.error) {
@@ -234,6 +247,17 @@ sap.ui.define([
 				}));
 				this._bindList(true);
 			},
+			
+			_onErrorsMatched: function() {
+				this.getModel("masterView").setProperty("/errorsMode", true);
+				
+				this.getView().byId("list").getBinding("items").filter(new Filter({
+					path: "status",
+					operator: "EQ",
+					value1: "Z"
+				}));
+				this._bindList(true);
+			},
 
 			/**
 			 * Shows the selected item on the detail page
@@ -242,9 +266,10 @@ sap.ui.define([
 			 * @private
 			 */
 			_showDetail : function (oItem) {
-				var bReplace = !Device.system.phone,
-					sTarget = this.getModel("masterView").getProperty("/approveMode") ? "approveObject" : "object";
-				this.getRouter().navTo(sTarget, {
+				var bReplace = !Device.system.phone;
+
+				
+				this.getRouter().navTo(this.getNavigationTarget(), {
 					objectId : oItem.getBindingContext().getProperty("id")
 				}, bReplace);
 			},

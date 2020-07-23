@@ -17,7 +17,7 @@
 					"odataVersion": "2.0",
 					"localUri": "localService/metadata.xml"
 				}
-			},		
+			},
 			"environmentInfo": {
 				"uri": "/sap/opu/odata/sap/z_common_srv",
 				"type": "OData",
@@ -139,6 +139,14 @@
 					]
 				},
 				{
+					"pattern": "errors",
+					"name": "errors",
+					"target": [
+						"object", 
+						"master"
+					]
+				},
+				{
 					"pattern": "Requests/{objectId}",
 					"name": "object",
 					"target": [
@@ -153,6 +161,14 @@
 						"master",
 						"object"
 					]
+				},
+				{
+					"pattern": "errors/Requests/{objectId}",
+					"name": "errorsObject",
+					"target":[
+						"master",
+						"object"
+					] 
 				}
 			],
 			"targets": {
