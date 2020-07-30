@@ -185,8 +185,8 @@ sap.ui.define([
 				result = detailModel.getProperty("/approvalResult"),
 				decisionText = detailModel.getProperty("/decisionText"),
 				approvalTypeText = result === "A" ? "approved" : "rejected";
-
-			if (!detailModel.getProperty("/searchTerm")) {
+				
+			if (result === "A" && detailModel.getProperty("/financeApproval") && !detailModel.getProperty("/searchTerm")) {
 				var searchTerm = sap.ui.getCore().byId("searchTerm");
 				searchTerm.setValueState(ValueState.Error);
 				return;
@@ -706,9 +706,9 @@ sap.ui.define([
 							});
 
 						}
-					})
+					});
 				}
-			})
+			});
 
 		}
 
