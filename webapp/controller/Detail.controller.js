@@ -250,6 +250,8 @@ sap.ui.define([
 						sap.m.MessageToast.show("The request has been successfully " + approvalTypeText, {
 							duration: 7000
 						});
+						
+						sap.ui.getCore().getEventBus().publish("master", "refresh");
 					}.bind(this)
 				});
 			}.bind(this));

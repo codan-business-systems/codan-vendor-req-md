@@ -59,6 +59,8 @@ sap.ui.define([
 				this.getRouter().getRoute("approve").attachPatternMatched(this._onApproveMatched, this);
 				this.getRouter().getRoute("errors").attachPatternMatched(this._onErrorsMatched, this); 
 				this.getRouter().attachBypassed(this.onBypassed, this);
+				
+				sap.ui.getCore().getEventBus().subscribe("master", "refresh", this.onRefresh, this);
 			},
 
 			/* =========================================================== */
@@ -114,10 +116,14 @@ sap.ui.define([
 			 * @public
 			 */
 			onRefresh : function () {
-				this._oList.getBinding("items").refresh();
+				if (!this._oList) {
+					this._oList = this.byId("list");
+				}
+				
+				if (this._oList && this._oList.getBinding("items")) {
+					this._oList.getBinding("items").refresh();
+				}
 			},
-
-
 
 			/**
 			 * Event handler for the list selection event
