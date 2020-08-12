@@ -238,6 +238,8 @@ sap.ui.define([
 			});
 
 			changesUpdated.then(function () {
+				
+				model.setProperty(this._sObjectPath + "/status", result);
 				model.create("/Approvals", {
 					id: this._sObjectId,
 					approvalResult: result,
