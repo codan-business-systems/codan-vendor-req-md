@@ -293,13 +293,36 @@ sap.ui.define([
 			this._authLevelLoaded = Promise.all([oCommonModel.metadataLoaded(),
 				this._myUserIdLoaded,
 				new Promise(function (res, rej) {
-					oCommonModel.read("/AppAuthorisations(application='VENDOR_REQ')", {
+					oCommonModel.read("/AppAuthorisations", {
+						filters: new Filter({
+							path: "application",
+							operator: FilterOperator.EQ,
+							value1: "VENDOR_REQ"
+						}),
 						success: function (data) {
-							if (data.authorisation !== "CREATE") {
-								oDetailModel.setProperty("/approveMode", true);
-								oDetailModel.setProperty("/financeApproval", data.authorisation === "AP" || data.authorisation === "ADMIN");
+							
+							if (data.results) {
+								var approveMode = false,
+									financeApproval = false,
+									authLevel = "";
+								data.results.forEach(function(a) {
+									if (!a.authorisation === "CREATE") {
+										approveMode = true;
+									}
+									
+									if (a.authorisation === "AP" || a.authorisation === "ADMIN") {
+										financeApproval = true;
+										authLevel = a.authorisation;
+									} else {
+										if (!authLevel) {
+											authLevel = a.authorisation;
+										}
+									}
+								});
 							}
-							oDetailModel.setProperty("/authLevel", data.authorisation);
+							oDetailModel.setProperty("/approveMode", approveMode);
+							oDetailModel.setProperty("/financeApproval", financeApproval);
+							oDetailModel.setProperty("/authLevel", authLevel);
 							res();
 						},
 						error: rej
