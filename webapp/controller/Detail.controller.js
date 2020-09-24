@@ -149,6 +149,9 @@ sap.ui.define([
 				this.resubmitRequest();
 				return;
 			}
+			
+			// Refresh the main element at this point.
+			this.getView().getElementBinding().refresh(true);
 
 			// Check if we need to show the questionnaire dialog
 			var questionnaireComplete = this._checkForQuestionsAndDisplayDialog(),
@@ -179,7 +182,11 @@ sap.ui.define([
 			}
 		},
 
-		okDecisionDialog: function () {
+		okDecisionDialog: function (oEvent) {
+			
+			var button = oEvent.getSource();
+			button.setEnabled(false);
+			
 			var model = this.getModel(),
 				detailModel = this.getModel("detailView"),
 				result = detailModel.getProperty("/approvalResult"),
@@ -189,11 +196,13 @@ sap.ui.define([
 			if (result === "A" && detailModel.getProperty("/financeApproval") && !detailModel.getProperty("/searchTerm")) {
 				var searchTerm = sap.ui.getCore().byId("searchTerm");
 				searchTerm.setValueState(ValueState.Error);
+				button.setEnabled(true);
 				return;
 			}
 
 			if (result !== "A" && !decisionText) {
 				MessageBox.alert("msgNoDecisionText");
+				button.setEnabled(true);
 				return;
 			}
 
@@ -239,19 +248,21 @@ sap.ui.define([
 
 			changesUpdated.then(function () {
 				
-				model.setProperty(this._sObjectPath + "/status", result);
+				//model.setProperty(this._sObjectPath + "/status", result);
 				model.create("/Approvals", {
 					id: this._sObjectId,
 					approvalResult: result,
 					decisionText: decisionText
 				}, {
 					success: function () {
+						button.setEnabled(true);
 						this.cancelDecisionDialog();
 						sap.m.MessageToast.show("The request has been successfully " + approvalTypeText, {
 							duration: 7000
 						});
 						
 						sap.ui.getCore().getEventBus().publish("master", "refresh");
+						this.getRouter().getTargets().display("detailNoObjectsAvailable");
 					}.bind(this)
 				});
 			}.bind(this));
@@ -294,11 +305,11 @@ sap.ui.define([
 				this._myUserIdLoaded,
 				new Promise(function (res, rej) {
 					oCommonModel.read("/AppAuthorisations", {
-						filters: new Filter({
+						filters: [new Filter({
 							path: "application",
 							operator: FilterOperator.EQ,
 							value1: "VENDOR_REQ"
-						}),
+						})],
 						success: function (data) {
 							
 							if (data.results) {
@@ -320,9 +331,9 @@ sap.ui.define([
 									}
 								});
 							}
-							oDetailModel.setProperty("/approveMode", approveMode);
+							/*oDetailModel.setProperty("/approveMode", approveMode);
 							oDetailModel.setProperty("/financeApproval", financeApproval);
-							oDetailModel.setProperty("/authLevel", authLevel);
+							oDetailModel.setProperty("/authLevel", authLevel);*/
 							res();
 						},
 						error: rej
@@ -441,8 +452,25 @@ sap.ui.define([
 
 						return result;
 					});
+					
+					//Make sure we don't overwrite the existing org assignments
+					var origOrg = that.getModel("detailView").getProperty("/orgAssignments");
+					
+					orgAssignments = orgAssignments.filter(function(o) {
+						return !origOrg.some(function(i) {
+							return i.id === o.id && i.companyCode === o.companyCode;
+						});
+					});
+					
+					if (orgAssignments.length > 0) {
+						that.getModel("detailView").setProperty("/orgAssignments", orgAssignments);
+					}
 
-					oViewModel.setProperty("/orgAssignments", orgAssignments);
+					// Set the approval flags
+					var authLevel = oModel.getProperty(that._sObjectPath + "/approvalStep");
+					oViewModel.setProperty("/approveMode", oModel.getProperty(that._sObjectPath + "/canApprove"));
+					oViewModel.setProperty("/authLevel", authLevel);
+					oViewModel.setProperty("/financeApproval", authLevel === "AP" || authLevel === "ADMIN");
 				}
 			});
 
@@ -541,7 +569,7 @@ sap.ui.define([
 
 			return new Promise(function (res, rej) {
 				modelQuestions = modelQuestions.filter(function (q) {
-					return q.status && q.role !== "CREATE";
+					return q.status && q.role !== "CREATE" && q.role === detailModel.getProperty("/authLevel");
 				});
 				questions = modelQuestions.map(function (q) {
 					return Object.assign({

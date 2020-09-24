@@ -142,7 +142,7 @@
 					"pattern": "errors",
 					"name": "errors",
 					"target": [
-						"object", 
+						"object",
 						"master"
 					]
 				},
@@ -165,10 +165,10 @@
 				{
 					"pattern": "errors/Requests/{objectId}",
 					"name": "errorsObject",
-					"target":[
+					"target": [
 						"master",
 						"object"
-					] 
+					]
 				}
 			],
 			"targets": {

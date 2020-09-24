@@ -12,6 +12,9 @@ sap.ui.define([
 			 * @public
 			 * @alias approve.req.vendor.codan.model.ListSelector
 			 */
+			 
+			
+			_listLoadFinished: false,
 
 			constructor : function () {
 				this._oWhenListHasBeenSet = new Promise(function (fnResolveListHasBeenSet) {
@@ -23,14 +26,21 @@ sap.ui.define([
 					// Used to wait until the setBound masterList function is invoked
 					this._oWhenListHasBeenSet
 						.then(function (oList) {
-							oList.getBinding("items").attachEventOnce("dataReceived",
+							oList.getBinding("items").attachEvent("dataReceived",
 								function (oData) {
 									if (!oData.getParameter("data")) {
-										fnReject({
+										/*fnReject({
 											list : oList,
 											error : true
 										});
+										return;*/
 									}
+									
+									if (this._listLoadFinished) {
+										return;
+									}
+									
+									this._listLoadFinished = true;
 									var oFirstListItem = oList.getItems()[0];
 									if (oFirstListItem) {
 										// Have to make sure that first list Item is selected

@@ -125,7 +125,7 @@
 					</IconTabFilter>
 					<IconTabFilter id="iconTabNotes" key="notes" icon="sap-icon://request" tooltip="Request Notes"
 						iconColor="{= !!${notes} ? 'Positive' : 'Default' }">
-						<TextArea id="notes" height="100%" width="100%" value="{notes}" editable="true" rows="20" growing="true"/>
+						<TextArea id="notes" height="100%" width="100%" value="{notes}" editable="false" rows="20" growing="true"/>
 					</IconTabFilter>
 					<IconTabFilter id="iconTabApprovals" key="tab3" icon="sap-icon://person-placeholder"
 						iconColor="{= ${status} === 'A' ? 'Positive' : 'Negative' }" tooltip="Approvals">
@@ -138,11 +138,14 @@
 					<IconTabFilter id="iconTabAttachment" key="tab4" icon="sap-icon://attachment" tooltip="{i18n>detailIconTabBarAttachments}"
 						count="{attachmentCount}">
 						<UploadCollection id="attachments" multiple="false" items="{ToAttachments}" maximumFilenameLength="0" maximumFileSize="0"
-							change="changeAttachment" fileDeleted="deleteAttachment" uploadComplete="uploadComplete" noDataText="{i18n>txtNoAttachments}"
-							uploadEnabled="true" busy="{detailView>/attachmentsBusy}">
+							noDataText="{i18n>txtNoAttachments}"
+							uploadEnabled="false" 
+							busy="{detailView>/attachmentsBusy}">
 							<items>
 								<UploadCollectionItem documentId="{attachmentId}" fileName="{fileName}" mimeType="{mimeType}" visibleEdit="false"
-									url="/sap/opu/odata/sap/z_vendor_req_srv/Attachments('{attachmentId}')/$value">
+									url="/sap/opu/odata/sap/z_vendor_req_srv/Attachments('{attachmentId}')/$value"
+									enableEdit="false"
+									enableDelete="false">
 									<attributes>
 										<ObjectAttribute title="File Size" text="{parts:[{path:'fileSize'}], formatter: '.formatter.formatAttachmentSize'}"/>
 										<ObjectAttribute title="Uploaded By" text="{createdByName}"/>
