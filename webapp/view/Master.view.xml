@@ -60,6 +60,7 @@
 						title="{name1}">
 						<attributes>
 							<ObjectAttribute text="{id}"/>
+							<ObjectAttribute visible="{masterView>/approveMode}" text="{createdByName}"/>
 						</attributes>
 						<firstStatus>
 							<ObjectStatus state="Error" text="{statusText}"/>
