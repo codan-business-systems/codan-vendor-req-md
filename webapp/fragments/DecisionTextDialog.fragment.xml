@@ -40,8 +40,9 @@
 		</l:VerticalLayout>
 	</content>
 	<buttons>
-			<Button text="{i18n>btnCancel}" type="Reject" press="cancelDecisionDialog"/>
-			<Button text="{i18n>btnOk}" type="Emphasized" press="okDecisionDialog"/>
+		<Button text="{i18n>btnOk}" type="Emphasized" press="okDecisionDialog"/>
+		<Button text="{i18n>btnCancel}" type="Reject" press="cancelDecisionDialog"/>
+
 	</buttons>
 </Dialog>
 </core:FragmentDefinition>
