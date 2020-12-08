@@ -54,8 +54,8 @@ sap.ui.define([
 
 		},
 
-		formatBankDetailsDescription: function (bankVerifiedWith, newBankNumber) {
-			var result = bankVerifiedWith ? "Entered and Verified With: " + bankVerifiedWith : "Not Provided";
+		formatBankDetailsDescription: function (bankVerifiedWith, newBankNumber, bankVerifiedTel) {
+			var result = bankVerifiedWith ? "Entered and Verified With: " + bankVerifiedWith + " (" + bankVerifiedTel + ")" : "Not Provided";
 
 			if (newBankNumber) {
 				result = "[Bank Key does not exist in SAP] - " + result;

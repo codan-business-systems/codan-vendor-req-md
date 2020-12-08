@@ -39,7 +39,7 @@
 												<!--infoState="{= !!${bankVerifiedWith} ? 'Success' : 'Error' }"-->
 												<!--description="{= !!${bankVerifiedWith} ? 'Entered and Verified With: ' + ${bankVerifiedWith} : 'Not Provided' }"-->
 												<codan:ListItemWithColorIcon id="bankDetailsListItem" title="Bank Details"
-													description="{ parts:[{path:'bankVerifiedWith'}, {path:'newBankNumber'}], formatter: '.formatter.formatBankDetailsDescription' }"
+													description="{ parts:[{path:'bankVerifiedWith'}, {path:'newBankNumber'}, {path:'bankVerifiedTel'}], formatter: '.formatter.formatBankDetailsDescription' }"
 													icon="{ parts:[{path:'bankVerifiedWith'}, {path:'newBankNumber'}], formatter: '.formatter.formatBankDetailsIcon' }"
 													infoState="{ parts:[{path:'bankVerifiedWith'}, {path:'newBankNumber'}], formatter: '.formatter.formatBankDetailsInfoState' }"
 													iconInset="false"/>
