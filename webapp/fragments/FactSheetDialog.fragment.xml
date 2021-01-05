@@ -1,0 +1,8 @@
+<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core">	
+	<Dialog id="factSheetDialog" title="Request Details" contentWidth="90%">
+		<core:ComponentContainer id="componentFactSheet"/>
+		<buttons>
+			<Button text="{i18n>btnCancel}" type="Reject" press="cancelFactSheetDialog"/>
+		</buttons>
+	</Dialog>
+</core:FragmentDefinition>

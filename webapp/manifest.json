@@ -74,6 +74,11 @@
 					"minVersion": "1.38",
 					"lazy": true
 				}
+			},
+			"components": {
+				"factsheet.vendor.codan": {
+					"lazy": false
+				}
 			}
 		},
 		"contentDensities": {

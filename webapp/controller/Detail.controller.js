@@ -7,8 +7,9 @@ sap.ui.define([
 	"sap/ui/model/Filter",
 	"sap/ui/model/FilterOperator",
 	"sap/ui/core/ValueState",
-	"sap/m/MessageToast"
-], function (BaseController, JSONModel, formatter, MessageBox, Filter, FilterOperator, ValueState, MessageToast) {
+	"sap/m/MessageToast",
+	"sap/m/Dialog"
+], function (BaseController, JSONModel, formatter, MessageBox, Filter, FilterOperator, ValueState, MessageToast, Dialog) {
 	"use strict";
 
 	return BaseController.extend("approve.req.vendor.codan.controller.Detail", {
@@ -17,7 +18,9 @@ sap.ui.define([
 
 		_authLevelLoaded: {}, //Promise to determine if the user's auth level has been loaded.
 
-		_oQuestionExplainTextPopover: {},
+		_oQuestionExplainTextPopover: undefined,
+		_oFactSheetComponent: undefined,
+		_oFactSheetDialog: undefined,
 
 		/* =========================================================== */
 		/* lifecycle methods                                           */
@@ -65,6 +68,9 @@ sap.ui.define([
 				authLevel: "CREATE",
 				me: "" //My SAP user ID
 			});
+
+			this._oFactSheetDialog = sap.ui.xmlfragment("approve.req.vendor.codan.fragments.FactSheetDialog", this);
+			this.getView().addDependent(this._oFactSheetDialog);
 
 			this.getRouter().getRoute("object").attachPatternMatched(this._onObjectMatched, this);
 			this.getRouter().getRoute("approveObject").attachPatternMatched(this._onApproveObjectMatched, this);
@@ -132,7 +138,7 @@ sap.ui.define([
 		},
 
 		navigateToReq: function () {
-			var oCrossAppNavigator = sap.ushell.Container.getService("CrossApplicationNavigation");
+/*			var oCrossAppNavigator = sap.ushell.Container.getService("CrossApplicationNavigation");
 			var hash = (oCrossAppNavigator && oCrossAppNavigator.hrefForExternal({
 				target: {
 					semanticObject: "VendorRequest",
@@ -140,7 +146,29 @@ sap.ui.define([
 				}
 			})) + "&/requests/" + this._sObjectId + "/" + this.getModel().getProperty(this._sObjectPath + "/companyCode");
 
-			sap.m.URLHelper.redirect(window.location.href.split('#')[0] + hash, true);
+			sap.m.URLHelper.redirect(window.location.href.split('#')[0] + hash, true);*/
+			
+			this._oFactSheetComponent.setCompanyCode(this.getModel().getProperty(this._sObjectPath + "/companyCode"));
+			this._oFactSheetComponent.setRequestId(this._sObjectId);
+			this._oFactSheetComponent.setEditable(!this.getModel("detailView").getProperty("/approveMode"));
+			this._oFactSheetDialog.open();
+			
+			this._oFactSheetComponent.loadData();
+			
+		},
+		
+		cancelFactSheetDialog: function() {
+			var that = this;
+			
+			// If the fact sheet is in edit mode, 
+			if (this._oFactSheetComponent.getProperty("editable")) {
+				this._oFactSheetComponent.attachEventOnce("editModeChanged", function() {
+					that._oFactSheetDialog.close();
+				});
+				this._oFactSheetComponent.toggleEditMode();
+			} else {
+				this._oFactSheetDialog.close();
+			}
 		},
 
 		onApprove: function () {
@@ -149,7 +177,7 @@ sap.ui.define([
 				this.resubmitRequest();
 				return;
 			}
-			
+
 			// Refresh the main element at this point.
 			this.getView().getElementBinding().refresh(true);
 
@@ -183,16 +211,16 @@ sap.ui.define([
 		},
 
 		okDecisionDialog: function (oEvent) {
-			
+
 			var button = oEvent.getSource();
 			button.setEnabled(false);
-			
+
 			var model = this.getModel(),
 				detailModel = this.getModel("detailView"),
 				result = detailModel.getProperty("/approvalResult"),
 				decisionText = detailModel.getProperty("/decisionText"),
 				approvalTypeText = result === "A" ? "approved" : "rejected";
-				
+
 			if (result === "A" && detailModel.getProperty("/financeApproval") && !detailModel.getProperty("/searchTerm")) {
 				var searchTerm = sap.ui.getCore().byId("searchTerm");
 				searchTerm.setValueState(ValueState.Error);
@@ -247,7 +275,7 @@ sap.ui.define([
 			});
 
 			changesUpdated.then(function () {
-				
+
 				//model.setProperty(this._sObjectPath + "/status", result);
 				model.create("/Approvals", {
 					id: this._sObjectId,
@@ -260,7 +288,7 @@ sap.ui.define([
 						sap.m.MessageToast.show("The request has been successfully " + approvalTypeText, {
 							duration: 7000
 						});
-						
+
 						sap.ui.getCore().getEventBus().publish("master", "refresh");
 						this.getRouter().getTargets().display("detailNoObjectsAvailable");
 					}.bind(this)
@@ -271,6 +299,40 @@ sap.ui.define([
 		/* =========================================================== */
 		/* begin: internal methods                                     */
 		/* =========================================================== */
+
+		_initialiseFactSheetComponent: function (oSettings) {
+			var that = this;
+			return new Promise(function (res, rej) {
+
+				if (that._oFactSheetComponent) {
+					res();
+					return;
+				}
+
+				sap.ui.component({
+					name: "factsheet.vendor.codan",
+					settings: oSettings,
+					async: true,
+					manifestFirst: true //deprecated from 1.49+
+						// manifest : true    //SAPUI5 >= 1.49
+				}).then(function (oComponent) {
+					that._oFactSheetComponent = oComponent;
+					sap.ui.getCore().byId("componentFactSheet").setComponent(that._oFactSheetComponent);
+
+					that._oFactSheetComponent.attachEvent("editModeChanged", function (event) {
+						that.getModel("detailView").setProperty("/editMode", event.getParameter("editable"));
+					});
+
+					that._oFactSheetComponent.attachEvent("messagesRaised", function () {
+						that.displayMessagesPopover();
+					});
+					res();
+				}).catch(function (oError) {
+					jQuery.sap.log.error(oError);
+					rej();
+				});
+			});
+		},
 
 		/**
 		 * Binds the view to the object path and expands the aggregated line items.
@@ -290,16 +352,38 @@ sap.ui.define([
 			}.bind(this));
 		},
 
+		_setupFactSheetComponent: function (oSettings) {
+			var that = this;
+
+			this._initialiseFactSheetComponent(oSettings).then(function () {
+				for (var prop in oSettings) {
+					if (oSettings.hasOwnProperty(prop)) {
+						var setter = "set" + prop.charAt(0).toUpperCase() + prop.slice(1);
+						that._oFactSheetComponent[setter](oSettings[prop]);
+					}
+				}
+			});
+
+		},
+
 		_onObjectMatched: function (oEvent) {
+			
+			this._sObjectId = oEvent.getParameter("arguments").objectId;
 			this.getModel("detailView").setProperty("/approveMode", false);
+
+			this._setupFactSheetComponent({
+				requestId: this._sObjectId,
+				changeRequestMode: true,
+				editable: true,
+				showHeader: false
+			});
 			this._setupBinding(oEvent);
 		},
 
 		_onApproveObjectMatched: function (oEvent) {
 
 			// Retrieve my authorisation level
-			var oCommonModel = this.getOwnerComponent().getModel("common"),
-				oDetailModel = this.getModel("detailView");
+			var oCommonModel = this.getOwnerComponent().getModel("common");
 
 			this._authLevelLoaded = Promise.all([oCommonModel.metadataLoaded(),
 				this._myUserIdLoaded,
@@ -311,16 +395,16 @@ sap.ui.define([
 							value1: "VENDOR_REQ"
 						})],
 						success: function (data) {
-							
+
 							if (data.results) {
 								var approveMode = false,
 									financeApproval = false,
 									authLevel = "";
-								data.results.forEach(function(a) {
+								data.results.forEach(function (a) {
 									if (!a.authorisation === "CREATE") {
 										approveMode = true;
 									}
-									
+
 									if (a.authorisation === "AP" || a.authorisation === "ADMIN") {
 										financeApproval = true;
 										authLevel = a.authorisation;
@@ -452,16 +536,16 @@ sap.ui.define([
 
 						return result;
 					});
-					
+
 					//Make sure we don't overwrite the existing org assignments
 					var origOrg = that.getModel("detailView").getProperty("/orgAssignments");
-					
-					orgAssignments = orgAssignments.filter(function(o) {
-						return !origOrg.some(function(i) {
+
+					orgAssignments = orgAssignments.filter(function (o) {
+						return !origOrg.some(function (i) {
 							return i.id === o.id && i.companyCode === o.companyCode;
 						});
 					});
-					
+
 					if (orgAssignments.length > 0) {
 						that.getModel("detailView").setProperty("/orgAssignments", orgAssignments);
 					}
@@ -530,6 +614,10 @@ sap.ui.define([
 				authLevel = "",
 				questionList = this.getView().byId("questionListMD"),
 				that = this;
+				
+			if (!approveMode) {
+				return;
+			}
 
 			// If I'm the creator of the requisition, the approval phase is always CREATE
 			this._authLevelLoaded.then(function () {
@@ -744,7 +832,7 @@ sap.ui.define([
 		},
 
 		deleteRequest: function () {
-			
+
 			var that = this;
 
 			MessageBox.confirm("Are you sure you want to delete the request?", {

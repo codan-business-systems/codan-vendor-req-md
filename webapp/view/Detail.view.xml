@@ -24,6 +24,9 @@
 			<IconTabBar id="iconTabBar" class="sapUiResponsiveContentPadding" selectedKey="{detailView>/selectedTab}">
 				<items>
 					<IconTabFilter id="iconTabBarFilter1" key="tab1" icon="sap-icon://hint" tooltip="{i18n>detailIconTabBarInfo}">
+						<Panel>
+							<Link text="{i18n>txtLinkDisplayRequest}" press="navigateToReq"/>
+						</Panel>
 						<Panel id="detailIconPanel">
 							<HBox width="100%">
 								<VBox width="100%">
@@ -66,9 +69,6 @@
 									</l:BlockLayout>
 								</VBox>
 							</HBox>
-						</Panel>
-						<Panel>
-							<Link text="{i18n>txtLinkDisplayRequest}" press="navigateToReq"/>
 						</Panel>
 					</IconTabFilter>
 					<IconTabFilter id="iconTabOrgAssignment" key="tab7" icon="sap-icon://customer-order-entry" tooltip="Company Assignment"
