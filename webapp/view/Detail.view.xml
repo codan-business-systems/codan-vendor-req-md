@@ -179,7 +179,7 @@
 			<semantic:PositiveAction id="btnApprove" text="{= ${detailView>/errorsMode} ? 'Retry' : 'Approve' }" press="onApprove" visible="{canApprove}"/>
 		</semantic:positiveAction>
 		<semantic:negativeAction>
-			<semantic:NegativeAction id="btnReject" text="{= ${detailView>/errorsMode} ? 'Delete' : 'Reject' }" press="onReject" visible="{canApprove}"/>
+			<semantic:NegativeAction id="btnReject" text="{= ${detailView>/approveMode} ? 'Reject' : 'Delete' }" press="onDeleteOrReject"/>
 		</semantic:negativeAction>
 	</semantic:DetailPage>
 </mvc:View>

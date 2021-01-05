@@ -191,8 +191,8 @@ sap.ui.define([
 
 		},
 
-		onReject: function () {
-			if (this.getModel("detailView").getProperty("/errorsMode")) {
+		onDeleteOrReject: function () {
+			if (!this.getModel("detailView").getProperty("/approveMode")) {
 				this.deleteRequest();
 				return;
 			}
