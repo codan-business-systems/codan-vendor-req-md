@@ -2,6 +2,7 @@
 	<Dialog id="factSheetDialog" title="Request Details" contentWidth="90%">
 		<core:ComponentContainer id="componentFactSheet"/>
 		<buttons>
+			<Button text="Save" type="Accept" press="saveFactSheet"/>
 			<Button text="{i18n>btnCancel}" type="Reject" press="cancelFactSheetDialog"/>
 		</buttons>
 	</Dialog>

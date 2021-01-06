@@ -295,6 +295,10 @@ sap.ui.define([
 				});
 			}.bind(this));
 		},
+		
+		saveFactSheet: function() {
+			this._oFactSheetComponent.save();
+		},
 
 		/* =========================================================== */
 		/* begin: internal methods                                     */
