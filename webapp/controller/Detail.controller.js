@@ -4,12 +4,14 @@ sap.ui.define([
 	"sap/ui/model/json/JSONModel",
 	"approve/req/vendor/codan/model/formatter",
 	"sap/m/MessageBox",
+	"sap/m/MessagePopover",
+	"sap/m/MessagePopoverItem",
 	"sap/ui/model/Filter",
 	"sap/ui/model/FilterOperator",
 	"sap/ui/core/ValueState",
 	"sap/m/MessageToast",
 	"sap/m/Dialog"
-], function (BaseController, JSONModel, formatter, MessageBox, Filter, FilterOperator, ValueState, MessageToast, Dialog) {
+], function (BaseController, JSONModel, formatter, MessageBox, MessagePopover, MessagePopoverItem, Filter, FilterOperator, ValueState, MessageToast, Dialog) {
 	"use strict";
 
 	return BaseController.extend("approve.req.vendor.codan.controller.Detail", {
@@ -151,6 +153,7 @@ sap.ui.define([
 			this._oFactSheetComponent.setCompanyCode(this.getModel().getProperty(this._sObjectPath + "/companyCode"));
 			this._oFactSheetComponent.setRequestId(this._sObjectId);
 			this._oFactSheetComponent.setEditable(!this.getModel("detailView").getProperty("/approveMode"));
+			this.getModel("detailView").setProperty("/editMode", true);
 			this._oFactSheetDialog.open();
 			
 			this._oFactSheetComponent.loadData();
@@ -298,6 +301,36 @@ sap.ui.define([
 		
 		saveFactSheet: function() {
 			this._oFactSheetComponent.save();
+		},
+		
+		submitFactSheet: function() {
+			this._oFactSheetComponent.submit();
+		},
+		
+		displayMessagesPopover: function (oEvent) {
+			var oMessagesButton = oEvent ? oEvent.getSource() : this.byId("page")
+				.getAggregation("messagesIndicator").getAggregation("_control");
+
+			if (!this._oMessagePopover) {
+				this._oMessagePopover = new MessagePopover({
+					items: {
+						path: "message>/",
+						template: new MessagePopoverItem({
+							description: "{message>description}",
+							type: "{message>type}",
+							title: "{message>message}",
+							subtitle: "{message>subtitle}"
+						})
+					},
+					initiallyExpanded: true
+				});
+				oMessagesButton.addDependent(this._oMessagePopover);
+			}
+
+			if (oEvent || !this._oMessagePopover.isOpen()) {
+				this._oMessagePopover.toggle(oMessagesButton);
+			}
+
 		},
 
 		/* =========================================================== */

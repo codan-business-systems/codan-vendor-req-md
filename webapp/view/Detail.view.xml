@@ -175,6 +175,9 @@
 				</items>
 			</IconTabBar>
 		</semantic:content>
+		<semantic:messagesIndicator>
+			<semantic:MessagesIndicator visible="{detailView>/editMode}" press="displayMessagesPopover"/>
+		</semantic:messagesIndicator>
 		<semantic:positiveAction>
 			<semantic:PositiveAction id="btnApprove" text="{= ${detailView>/errorsMode} ? 'Retry' : 'Approve' }" press="onApprove" visible="{canApprove}"/>
 		</semantic:positiveAction>
