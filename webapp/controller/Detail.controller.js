@@ -73,6 +73,10 @@ sap.ui.define([
 
 			this._oFactSheetDialog = sap.ui.xmlfragment("approve.req.vendor.codan.fragments.FactSheetDialog", this);
 			this.getView().addDependent(this._oFactSheetDialog);
+			
+			this._oFactSheetDialog.attachEvent("afterClose", function() {
+				sap.ui.getCore().getEventBus().publish("master", "refresh");
+			});
 
 			this.getRouter().getRoute("object").attachPatternMatched(this._onObjectMatched, this);
 			this.getRouter().getRoute("approveObject").attachPatternMatched(this._onApproveObjectMatched, this);
@@ -140,21 +144,20 @@ sap.ui.define([
 		},
 
 		navigateToReq: function () {
-/*			var oCrossAppNavigator = sap.ushell.Container.getService("CrossApplicationNavigation");
-			var hash = (oCrossAppNavigator && oCrossAppNavigator.hrefForExternal({
-				target: {
-					semanticObject: "VendorRequest",
-					action: "create"
-				}
-			})) + "&/requests/" + this._sObjectId + "/" + this.getModel().getProperty(this._sObjectPath + "/companyCode");
-
-			sap.m.URLHelper.redirect(window.location.href.split('#')[0] + hash, true);*/
+			
+			var dialog = this._oFactSheetDialog;
 			
 			this._oFactSheetComponent.setCompanyCode(this.getModel().getProperty(this._sObjectPath + "/companyCode"));
 			this._oFactSheetComponent.setRequestId(this._sObjectId);
 			this._oFactSheetComponent.setEditable(!this.getModel("detailView").getProperty("/approveMode"));
 			this.getModel("detailView").setProperty("/editMode", true);
-			this._oFactSheetDialog.open();
+			dialog.open();
+			
+			this._oFactSheetComponent.attachEvent("saved", function(event) {
+				if (event.getParameter("submitted")) {
+					dialog.close();
+				}
+			});
 			
 			this._oFactSheetComponent.loadData();
 			
