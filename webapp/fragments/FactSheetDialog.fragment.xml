@@ -2,7 +2,8 @@
 	<Dialog id="factSheetDialog" title="Request Details" contentWidth="90%">
 		<core:ComponentContainer id="componentFactSheet"/>
 		<buttons>
-			<Button text="Save" type="Emphasized" press="saveFactSheet"/>
+			<Button text="Edit" type="Emphasized" press="setEditMode" visible="{= !${detailView>/editMode} }"/>
+			<Button text="Save" type="Emphasized" press="saveFactSheet" visible="{detailView>/editMode}"/>
 			<Button text="Submit" type="Accept" visible="{= !${status} }" press="submitFactSheet"/>
 			<Button text="{i18n>btnCancel}" type="Reject" press="cancelFactSheetDialog"/>
 		</buttons>

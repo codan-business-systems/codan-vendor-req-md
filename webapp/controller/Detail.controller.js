@@ -150,7 +150,7 @@ sap.ui.define([
 			this._oFactSheetComponent.setCompanyCode(this.getModel().getProperty(this._sObjectPath + "/companyCode"));
 			this._oFactSheetComponent.setRequestId(this._sObjectId);
 			this._oFactSheetComponent.setEditable(!this.getModel("detailView").getProperty("/approveMode"));
-			this.getModel("detailView").setProperty("/editMode", true);
+			this.getModel("detailView").setProperty("/editMode", !this.getModel("detailView").getProperty("/approveMode"));
 			dialog.open();
 			
 			this._oFactSheetComponent.attachEvent("saved", function(event) {
@@ -310,6 +310,11 @@ sap.ui.define([
 			this._oFactSheetComponent.submit();
 		},
 		
+		setEditMode: function() {
+			this._oFactSheetComponent.toggleEditMode();
+			this.getModel("detailView").setProperty("/editMode", true);
+		},
+		
 		displayMessagesPopover: function (oEvent) {
 			var oMessagesButton = oEvent ? oEvent.getSource() : this.byId("page")
 				.getAggregation("messagesIndicator").getAggregation("_control");
@@ -424,6 +429,7 @@ sap.ui.define([
 
 			// Retrieve my authorisation level
 			var oCommonModel = this.getOwnerComponent().getModel("common");
+			this._sObjectId = oEvent.getParameter("arguments").objectId;
 
 			this._authLevelLoaded = Promise.all([oCommonModel.metadataLoaded(),
 				this._myUserIdLoaded,
@@ -464,7 +470,12 @@ sap.ui.define([
 					});
 				})
 			]);
-
+			this._setupFactSheetComponent({
+				requestId: this._sObjectId,
+				changeRequestMode: true,
+				editable: false,
+				showHeader: false
+			});
 			this._setupBinding(oEvent);
 
 		},
