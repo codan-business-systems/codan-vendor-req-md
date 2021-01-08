@@ -11,7 +11,8 @@ sap.ui.define([
 	"sap/ui/core/ValueState",
 	"sap/m/MessageToast",
 	"sap/m/Dialog"
-], function (BaseController, JSONModel, formatter, MessageBox, MessagePopover, MessagePopoverItem, Filter, FilterOperator, ValueState, MessageToast, Dialog) {
+], function (BaseController, JSONModel, formatter, MessageBox, MessagePopover, MessagePopoverItem, Filter, FilterOperator, ValueState,
+	MessageToast, Dialog) {
 	"use strict";
 
 	return BaseController.extend("approve.req.vendor.codan.controller.Detail", {
@@ -23,6 +24,8 @@ sap.ui.define([
 		_oQuestionExplainTextPopover: undefined,
 		_oFactSheetComponent: undefined,
 		_oFactSheetDialog: undefined,
+
+		_duplicateChecksComplete: undefined, //Promise to confirm that duplicate checks are complete
 
 		/* =========================================================== */
 		/* lifecycle methods                                           */
@@ -45,6 +48,9 @@ sap.ui.define([
 				accountingClerk: "",
 				paymentTerms: "",
 				searchTerm: "",
+				duplicateBankMessage: "",
+				duplicateAbnMessage: "",
+				duplicateNameMessage: "",
 				orgAssignments: [
 					/*
 						{
@@ -73,8 +79,8 @@ sap.ui.define([
 
 			this._oFactSheetDialog = sap.ui.xmlfragment("approve.req.vendor.codan.fragments.FactSheetDialog", this);
 			this.getView().addDependent(this._oFactSheetDialog);
-			
-			this._oFactSheetDialog.attachEvent("afterClose", function() {
+
+			this._oFactSheetDialog.attachEvent("afterClose", function () {
 				sap.ui.getCore().getEventBus().publish("master", "refresh");
 			});
 
@@ -144,31 +150,31 @@ sap.ui.define([
 		},
 
 		navigateToReq: function () {
-			
+
 			var dialog = this._oFactSheetDialog;
-			
+
 			this._oFactSheetComponent.setCompanyCode(this.getModel().getProperty(this._sObjectPath + "/companyCode"));
 			this._oFactSheetComponent.setRequestId(this._sObjectId);
 			this._oFactSheetComponent.setEditable(!this.getModel("detailView").getProperty("/approveMode"));
 			this.getModel("detailView").setProperty("/editMode", !this.getModel("detailView").getProperty("/approveMode"));
 			dialog.open();
-			
-			this._oFactSheetComponent.attachEvent("saved", function(event) {
+
+			this._oFactSheetComponent.attachEvent("saved", function (event) {
 				if (event.getParameter("submitted")) {
 					dialog.close();
 				}
 			});
-			
+
 			this._oFactSheetComponent.loadData();
-			
+
 		},
-		
-		cancelFactSheetDialog: function() {
+
+		cancelFactSheetDialog: function () {
 			var that = this;
-			
+
 			// If the fact sheet is in edit mode, 
 			if (this._oFactSheetComponent.getProperty("editable")) {
-				this._oFactSheetComponent.attachEventOnce("editModeChanged", function() {
+				this._oFactSheetComponent.attachEventOnce("editModeChanged", function () {
 					that._oFactSheetDialog.close();
 				});
 				this._oFactSheetComponent.toggleEditMode();
@@ -301,20 +307,20 @@ sap.ui.define([
 				});
 			}.bind(this));
 		},
-		
-		saveFactSheet: function() {
+
+		saveFactSheet: function () {
 			this._oFactSheetComponent.save();
 		},
-		
-		submitFactSheet: function() {
+
+		submitFactSheet: function () {
 			this._oFactSheetComponent.submit();
 		},
-		
-		setEditMode: function() {
+
+		setEditMode: function () {
 			this._oFactSheetComponent.toggleEditMode();
 			this.getModel("detailView").setProperty("/editMode", true);
 		},
-		
+
 		displayMessagesPopover: function (oEvent) {
 			var oMessagesButton = oEvent ? oEvent.getSource() : this.byId("page")
 				.getAggregation("messagesIndicator").getAggregation("_control");
@@ -412,7 +418,7 @@ sap.ui.define([
 		},
 
 		_onObjectMatched: function (oEvent) {
-			
+
 			this._sObjectId = oEvent.getParameter("arguments").objectId;
 			this.getModel("detailView").setProperty("/approveMode", false);
 
@@ -512,7 +518,11 @@ sap.ui.define([
 						oViewModel.setProperty("/busy", true);
 					},
 					dataReceived: function () {
-						oViewModel.setProperty("/busy", false);
+						if (this._allDataLoaded) {
+							this._allDataLoaded.then(function () {
+								oViewModel.setProperty("/busy", false);
+							});
+						}
 					}
 				}
 			});
@@ -563,52 +573,218 @@ sap.ui.define([
 
 			this.getOwnerComponent().oListSelector.selectAListItem(sPath);
 
-			// Read the vendor assignments into the local model
-			this.getModel().read(this._sObjectPath + "/ToOrgAssignments", {
-				success: function (data) {
+			this._setBusy(true);
 
-					var orgAssignments = data.results.map(function (o) {
-						var requestorCompCode = oModel.getProperty(that._sObjectPath + "/companyCode");
-						var result = {
-							id: o.id,
-							companyCode: o.companyCode,
-							companyCodeText: o.companyCodeText,
-							companyActive: o.companyActive,
-							companyEditable: o.companyStatus !== "X",
-							purchOrg: o.purchOrg,
-							purchOrgText: o.purchOrgText,
-							purchOrgActive: o.purchOrgActive,
-							purchOrgEditable: o.purchOrgStatus !== "X",
-							originalCompanyActive: o.companyActive,
-							originalPurchOrgActive: o.purchOrgActive
-						};
+			// Read org assignments
+			var orgAssignPromise = new Promise(function (res) {
+				// Read the vendor assignments into the local model
+				that.getModel().read(that._sObjectPath + "/ToOrgAssignments", {
+					success: function (data) {
 
-						that._calculateOrgAssignmentMessages(result, requestorCompCode);
+						var orgAssignments = data.results.map(function (o) {
+							var requestorCompCode = oModel.getProperty(that._sObjectPath + "/companyCode");
+							var result = {
+								id: o.id,
+								companyCode: o.companyCode,
+								companyCodeText: o.companyCodeText,
+								companyActive: o.companyActive,
+								companyEditable: o.companyStatus !== "X",
+								purchOrg: o.purchOrg,
+								purchOrgText: o.purchOrgText,
+								purchOrgActive: o.purchOrgActive,
+								purchOrgEditable: o.purchOrgStatus !== "X",
+								originalCompanyActive: o.companyActive,
+								originalPurchOrgActive: o.purchOrgActive
+							};
 
-						return result;
-					});
+							that._calculateOrgAssignmentMessages(result, requestorCompCode);
 
-					//Make sure we don't overwrite the existing org assignments
-					var origOrg = that.getModel("detailView").getProperty("/orgAssignments");
-
-					orgAssignments = orgAssignments.filter(function (o) {
-						return !origOrg.some(function (i) {
-							return i.id === o.id && i.companyCode === o.companyCode;
+							return result;
 						});
-					});
 
-					if (orgAssignments.length > 0) {
-						that.getModel("detailView").setProperty("/orgAssignments", orgAssignments);
+						//Make sure we don't overwrite the existing org assignments
+						var origOrg = that.getModel("detailView").getProperty("/orgAssignments");
+
+						orgAssignments = orgAssignments.filter(function (o) {
+							return !origOrg.some(function (i) {
+								return i.id === o.id && i.companyCode === o.companyCode;
+							});
+						});
+
+						if (orgAssignments.length > 0) {
+							that.getModel("detailView").setProperty("/orgAssignments", orgAssignments);
+						}
+
+						// Set the approval flags
+						var authLevel = oModel.getProperty(that._sObjectPath + "/approvalStep");
+						oViewModel.setProperty("/approveMode", oModel.getProperty(that._sObjectPath + "/canApprove"));
+						oViewModel.setProperty("/authLevel", authLevel);
+						oViewModel.setProperty("/financeApproval", authLevel === "AP" || authLevel === "ADMIN");
+
+						res();
 					}
-
-					// Set the approval flags
-					var authLevel = oModel.getProperty(that._sObjectPath + "/approvalStep");
-					oViewModel.setProperty("/approveMode", oModel.getProperty(that._sObjectPath + "/canApprove"));
-					oViewModel.setProperty("/authLevel", authLevel);
-					oViewModel.setProperty("/financeApproval", authLevel === "AP" || authLevel === "ADMIN");
-				}
+				});
 			});
 
+			oViewModel.setProperty("/duplicateBankMessage", "");
+			oViewModel.setProperty("/duplicateAbnMessage", "");
+			oViewModel.setProperty("/duplicateNameMessage", "");
+
+			var dupBank = this._checkDuplicateBank(),
+				dupAbn = this._checkDuplicateAbn(),
+				dupName = this._checkDuplicateName();
+
+			this._allDataLoaded = Promise.all([
+				orgAssignPromise,
+				dupBank,
+				dupAbn,
+				dupName
+			]);
+
+			this._allDataLoaded.then(function () {
+				this._setBusy(false);
+			}.bind(this));
+
+		},
+
+		_checkDuplicateBank: function () {
+
+			var detailModel = this.getModel("detailView"),
+				model = this.getModel(),
+				that = this;
+
+			return new Promise(function (res, rej) {
+
+				model.callFunction("/DuplicateBankCheck", {
+					urlParameters: {
+						"bankKey": "",
+						"bankAccount": "",
+						"bankCountry": "",
+						"currentVendor": "",
+						"requestId": that._sObjectId
+					},
+					success: function (data) {
+						if (data.results.length === 0) {
+							res();
+							return;
+						}
+
+						var vendors = "";
+
+						data.results.forEach(function (d) {
+							if (!vendors) {
+								vendors = d.id;
+							} else {
+								vendors = vendors + ", " + d.id;
+							}
+						});
+
+						detailModel.setProperty("/duplicateBankMessage",
+							vendors.indexOf(",") > 0 ? "Multiple Vendors (" + vendors + ") already exist with this bank account" :
+							"A Vendor (" + vendors + ") already exists with this bank account");
+
+						res();
+					},
+					error: function (err) {
+						MessageBox.error("Error checking duplicate bank details", {
+							title: "An error has occurred"
+						});
+						rej();
+					}
+				});
+			});
+		},
+
+		_checkDuplicateAbn: function () {
+
+			var detailModel = this.getModel("detailView"),
+				model = this.getModel(),
+				that = this;
+
+			return new Promise(function (res, rej) {
+
+				model.callFunction("/DuplicateAbnCheck", {
+				urlParameters: {
+					"abn": "",
+					"currentVendor": "",
+					"requestId": that._sObjectId
+				},
+					success: function (data) {
+						if (data.results.length === 0) {
+							res();
+							return;
+						}
+
+						var vendors = "";
+
+						data.results.forEach(function (d) {
+							if (!vendors) {
+								vendors = d.id;
+							} else {
+								vendors = vendors + ", " + d.id;
+							}
+						});
+
+						detailModel.setProperty("/duplicateAbnMessage",
+							vendors.indexOf(",") > 0 ? "Multiple Vendors (" + vendors + ") already exist with this ABN/Tax Number" :
+							"A Vendor (" + vendors + ") already exists with this ABN/Tax Number");
+
+						res();
+					},
+					error: function (err) {
+						MessageBox.error("Error checking duplicate bank abn", {
+							title: "An error has occurred"
+						});
+						rej();
+					}
+				});
+			});
+			
+		},
+
+		_checkDuplicateName: function () {
+			var detailModel = this.getModel("detailView"),
+				model = this.getModel(),
+				that = this;
+
+			return new Promise(function (res, rej) {
+
+				model.callFunction("/DuplicateNameCheck", {
+				urlParameters: {
+					"name": "",
+					"currentVendor": "",
+					"requestId": that._sObjectId
+				},
+					success: function (data) {
+						if (data.results.length === 0) {
+							res();
+							return;
+						}
+
+						var vendors = "";
+
+						data.results.forEach(function (d) {
+							if (!vendors) {
+								vendors = d.id;
+							} else {
+								vendors = vendors + ", " + d.id;
+							}
+						});
+
+						detailModel.setProperty("/duplicateNameMessage",
+							vendors.indexOf(",") > 0 ? "Multiple Vendors (" + vendors + ") already exist with this Vendor Name" :
+							"A Vendor (" + vendors + ") already exists with this Vendor Name");
+
+						res();
+					},
+					error: function (err) {
+						MessageBox.error("Error checking duplicate name", {
+							title: "An error has occurred"
+						});
+						rej();
+					}
+				});
+			});
 		},
 
 		_onMetadataLoaded: function () {
@@ -665,7 +841,7 @@ sap.ui.define([
 				authLevel = "",
 				questionList = this.getView().byId("questionListMD"),
 				that = this;
-				
+
 			if (!approveMode) {
 				return;
 			}
@@ -904,6 +1080,11 @@ sap.ui.define([
 				}
 			});
 
+		},
+
+		_setBusy: function (bValue) {
+			var oViewModel = this.getModel("detailView");
+			oViewModel.setProperty("/busy", bValue);
 		}
 
 	});
