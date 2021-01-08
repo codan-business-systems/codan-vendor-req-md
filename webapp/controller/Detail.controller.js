@@ -3,6 +3,7 @@ sap.ui.define([
 	"approve/req/vendor/codan/controller/BaseController",
 	"sap/ui/model/json/JSONModel",
 	"approve/req/vendor/codan/model/formatter",
+	"approve/req/vendor/codan/controller/NewBankDialog",
 	"sap/m/MessageBox",
 	"sap/m/MessagePopover",
 	"sap/m/MessagePopoverItem",
@@ -11,7 +12,8 @@ sap.ui.define([
 	"sap/ui/core/ValueState",
 	"sap/m/MessageToast",
 	"sap/m/Dialog"
-], function (BaseController, JSONModel, formatter, MessageBox, MessagePopover, MessagePopoverItem, Filter, FilterOperator, ValueState,
+], function (BaseController, JSONModel, formatter, NewBankDialog, MessageBox, MessagePopover, MessagePopoverItem, Filter, FilterOperator,
+	ValueState,
 	MessageToast, Dialog) {
 	"use strict";
 
@@ -24,6 +26,7 @@ sap.ui.define([
 		_oQuestionExplainTextPopover: undefined,
 		_oFactSheetComponent: undefined,
 		_oFactSheetDialog: undefined,
+		_oNewBankDialog: undefined,
 
 		_duplicateChecksComplete: undefined, //Promise to confirm that duplicate checks are complete
 
@@ -79,6 +82,8 @@ sap.ui.define([
 
 			this._oFactSheetDialog = sap.ui.xmlfragment("approve.req.vendor.codan.fragments.FactSheetDialog", this);
 			this.getView().addDependent(this._oFactSheetDialog);
+
+			this._oNewBankDialog = new NewBankDialog();
 
 			this._oFactSheetDialog.attachEvent("afterClose", function () {
 				sap.ui.getCore().getEventBus().publish("master", "refresh");
@@ -198,7 +203,10 @@ sap.ui.define([
 				that = this;
 
 			questionnaireComplete.then(function () {
-				that._showDecisionDialog("A");
+				that._bankDialogPromise = that._checkNewBank();
+				that._bankDialogPromise.then(function () {
+					that._showDecisionDialog("A");
+				});
 			});
 
 		},
@@ -704,11 +712,11 @@ sap.ui.define([
 			return new Promise(function (res, rej) {
 
 				model.callFunction("/DuplicateAbnCheck", {
-				urlParameters: {
-					"abn": "",
-					"currentVendor": "",
-					"requestId": that._sObjectId
-				},
+					urlParameters: {
+						"abn": "",
+						"currentVendor": "",
+						"requestId": that._sObjectId
+					},
 					success: function (data) {
 						if (data.results.length === 0) {
 							res();
@@ -739,7 +747,7 @@ sap.ui.define([
 					}
 				});
 			});
-			
+
 		},
 
 		_checkDuplicateName: function () {
@@ -750,11 +758,11 @@ sap.ui.define([
 			return new Promise(function (res, rej) {
 
 				model.callFunction("/DuplicateNameCheck", {
-				urlParameters: {
-					"name": "",
-					"currentVendor": "",
-					"requestId": that._sObjectId
-				},
+					urlParameters: {
+						"name": "",
+						"currentVendor": "",
+						"requestId": that._sObjectId
+					},
 					success: function (data) {
 						if (data.results.length === 0) {
 							res();
@@ -800,6 +808,30 @@ sap.ui.define([
 			oViewModel.setProperty("/busy", true);
 			// Restore original busy indicator delay for the detail view
 			oViewModel.setProperty("/delay", iOriginalViewBusyDelay);
+		},
+
+		_checkNewBank: function () {
+			var that = this;
+			return new Promise(function (res, rej) {
+				if ((that.getModel("detailView").getProperty("/authLevel") === "AP" ||
+						that.getModel("detailView").getProperty("/authLevel") === "ADMIN") &&
+					that.getModel().getProperty(that._sObjectPath + "/newBankNumber")) {
+
+					that._oNewBankDialog.attachEventOnce("closed",
+						function (event) {
+							// eslint-disable-next-line
+							if (event.getParameter("dialogOk")) {
+								res();
+							} else {
+								rej();
+							}
+						}, that);
+
+					that._oNewBankDialog.open(that.getView(), that.getModel(), that.getModel().getProperty(that._sObjectPath + "/accountCountry"));
+				} else {
+					res();
+				}
+			});
 		},
 
 		_showDecisionDialog: function (sDecision) {
