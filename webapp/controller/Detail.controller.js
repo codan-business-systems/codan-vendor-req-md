@@ -82,12 +82,14 @@ sap.ui.define([
 
 			this._oFactSheetDialog = sap.ui.xmlfragment("approve.req.vendor.codan.fragments.FactSheetDialog", this);
 			this.getView().addDependent(this._oFactSheetDialog);
-
-			this._oNewBankDialog = new NewBankDialog();
-
 			this._oFactSheetDialog.attachEvent("afterClose", function () {
 				sap.ui.getCore().getEventBus().publish("master", "refresh");
 			});
+
+			this._oNewBankDialog = new NewBankDialog();
+
+			this._oDecisionDialog = sap.ui.xmlfragment("approve.req.vendor.codan.fragments.DecisionTextDialog", this);
+			this.getView().addDependent(this._oDecisionDialog);
 
 			this.getRouter().getRoute("object").attachPatternMatched(this._onObjectMatched, this);
 			this.getRouter().getRoute("approveObject").attachPatternMatched(this._onApproveObjectMatched, this);
@@ -221,13 +223,7 @@ sap.ui.define([
 		},
 
 		cancelDecisionDialog: function () {
-			if (this._oDecisionDialog) {
-				if (this._oDecisionDialog.close) {
-					this._oDecisionDialog.close();
-				}
-				this._oDecisionDialog.destroy();
-				delete this._oDecisionDialog;
-			}
+			this._oDecisionDialog.close();
 		},
 
 		okDecisionDialog: function (oEvent) {
@@ -841,11 +837,6 @@ sap.ui.define([
 			model.setProperty("/accountingClerk", this.getModel().getProperty(this._sObjectPath + "/accountingClerk"));
 			model.setProperty("/paymentTerms", this.getModel().getProperty(this._sObjectPath + "/paymentTerms"));
 			model.setProperty("/searchTerm", this.getModel().getProperty(this._sObjectPath + "/searchTerm"));
-
-			if (!this._oDecisionDialog) {
-				this._oDecisionDialog = sap.ui.xmlfragment("approve.req.vendor.codan.fragments.DecisionTextDialog", this);
-				this.getView().addDependent(this._oDecisionDialog);
-			}
 
 			this._oDecisionDialog.open();
 
