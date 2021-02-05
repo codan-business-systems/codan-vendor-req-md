@@ -92,7 +92,7 @@ sap.ui.define([
 
 			bankNameCtrl.setValueState(bankName ? ValueState.None : ValueState.Error);
 			bankNameCtrl.setValueStateText(bankName ? "" : "Bank Name is required");
-			bankSwiftCtrl.setValueState(bankSwift ? ValueState.None : ValueState.Error);
+			bankSwiftCtrl.setValueState(bankSwift || this._sCountryKey === "AU" ? ValueState.None : ValueState.Error);
 			bankSwiftCtrl.setValueStateText(bankSwift ? "" : "Swift Code is required");
 
 			return !!(bankName && bankSwift);
