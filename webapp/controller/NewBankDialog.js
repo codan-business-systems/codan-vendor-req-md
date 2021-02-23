@@ -20,6 +20,7 @@ sap.ui.define([
 
 		_oDialog: undefined,
 		_bDialogOk: false,
+		_sCountryKey: "",
 
 		open: function (view, model, countryKey) {
 
@@ -30,6 +31,7 @@ sap.ui.define([
 
 			this._bDialogOk = false;
 			this.setRegionFilter(sap.ui.getCore().byId("newBankRegion"), model.getProperty(countryKey));
+			this._sCountryKey = countryKey;
 			this._oDialog.open();
 		},
 
@@ -95,7 +97,7 @@ sap.ui.define([
 			bankSwiftCtrl.setValueState(bankSwift || this._sCountryKey === "AU" ? ValueState.None : ValueState.Error);
 			bankSwiftCtrl.setValueStateText(bankSwift ? "" : "Swift Code is required");
 
-			return !!(bankName && bankSwift);
+			return !!(bankName && (bankSwift || this._sCountryKey === "AU"));
 
 		}
 	});
