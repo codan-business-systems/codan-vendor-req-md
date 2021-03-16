@@ -1,0 +1,11 @@
+<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core">	
+	<Dialog id="factSheetDialog" title="Request Details" contentWidth="90%">
+		<core:ComponentContainer id="componentFactSheet"/>
+		<buttons>
+			<Button text="Edit" type="Emphasized" press="setEditMode" visible="{= !${detailView>/editMode} }"/>
+			<Button text="Save" type="Emphasized" press="saveFactSheet" visible="{detailView>/editMode}"/>
+			<Button text="Submit" type="Accept" visible="{= !${status} || ${status} === 'R' }" press="submitFactSheet"/>
+			<Button text="{i18n>btnCancel}" type="Reject" press="cancelFactSheetDialog"/>
+		</buttons>
+	</Dialog>
+</core:FragmentDefinition>
