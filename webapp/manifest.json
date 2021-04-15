@@ -109,6 +109,14 @@
 					"defaultOperationMode": "",
 					"defaultUpdateMethod": "PUT"
 				}
+			},
+			"regions": {
+				"type": "sap.ui.model.json.JSONModel",
+				"settings": {
+					"sizeLimit": 9999
+				},
+				"uri": "model/regions.json",
+				"preload": true
 			}
 		},
 		"routing": {

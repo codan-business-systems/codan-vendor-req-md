@@ -40,6 +40,15 @@
       },
       "description": "SAPUI5 Test Resources"
     },
+	{
+		"path": "/sap/bc/ui5_ui5",
+		"target": {
+			"type": "destination",
+			"name": "GD1",
+			"entryPath": "/sap/bc/ui5_ui5"
+		},
+		"description": "SAP Gateway"
+	},
     {
       "path": "/sap/opu/odata",
       "target": {

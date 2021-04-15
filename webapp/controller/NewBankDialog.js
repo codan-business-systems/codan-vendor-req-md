@@ -4,7 +4,7 @@ sap.ui.define([
 ], function (ManagedObject, ValueState) {
 	"use strict";
 
-	return ManagedObject.extend("factsheet.vendor.codan.controller.NewBankDialog", {
+	return ManagedObject.extend("approve.req.vendor.codan.controller.NewBankDialog", {
 
 		metadata: {
 			events: {
@@ -20,18 +20,24 @@ sap.ui.define([
 
 		_oDialog: undefined,
 		_bDialogOk: false,
+		_oModel: undefined,
 		_sCountryKey: "",
+		_sBindingPath: "",
 
-		open: function (view, model, countryKey) {
+		open: function (view, model, bindingPath) {
 
 			if (!this._oDialog) {
-				this._oDialog = sap.ui.xmlfragment("factsheet.vendor.codan.view.dialog.NewBankDialog", this);
+				this._oDialog = sap.ui.xmlfragment("approve.req.vendor.codan.fragments.NewBankDialog", this);
 				view.addDependent(this._oDialog);
 			}
+			
+			this._oDialog.bindElement(bindingPath);
 
 			this._bDialogOk = false;
-			this.setRegionFilter(sap.ui.getCore().byId("newBankRegion"), model.getProperty(countryKey));
-			this._sCountryKey = countryKey;
+			this._sCountryKey = model.getProperty(bindingPath + "/accountCountry");
+			this._sBindingPath = bindingPath;
+			this._oModel = model;
+			this.setRegionFilter(sap.ui.getCore().byId("newBankRegion"), this._sCountryKey);
 			this._oDialog.open();
 		},
 
@@ -79,25 +85,66 @@ sap.ui.define([
 		newBankDialogOk: function () {
 			if (this.validateNewBankDialog()) {
 				this._bDialogOk = true;
+				
+				this.updateFields();
 				this.fireClosed({
 					dialogOk: true
 				});
 				this._oDialog.close();
 			}
 		},
+		
+		updateFields: function() {
+			//For some reason that I can't figure out binding is not working on this dialog
+			//Instead we'll update the fields manually
+			var aInputFields = [
+				{
+					controlId: "newBankName",
+					targetProperty: "bankName"
+				},
+				{
+					controlId: "newBranchName",
+					targetProperty: "bankBranch"
+				},
+				{
+					controlId: "newBankSwift",
+					targetProperty: "bankSwiftCode"
+				},
+				{
+					controlId: "newBankStreet",
+					targetProperty: "bankStreet"
+				},
+				{
+					controlId: "newBankCity",
+					targetProperty: "bankCity"
+				}
+			],
+			that = this;
+			
+			aInputFields.forEach(function(i) {
+				that._oModel.setProperty(that._sBindingPath + "/" + i.targetProperty, sap.ui.getCore().byId(i.controlId).getValue());
+			});
+			
+			this._oModel.setProperty(that._sBindingPath + "/bankRegion", sap.ui.getCore().byId("newBankRegion").getSelectedKey());
+				
+		},
 
 		validateNewBankDialog: function () {
 			var bankNameCtrl = sap.ui.getCore().byId("newBankName"),
 				bankSwiftCtrl = sap.ui.getCore().byId("newBankSwift"),
+				bankKeyCtrl = sap.ui.getCore().byId("newBankKey"),
 				bankName = bankNameCtrl.getValue(),
-				bankSwift = bankSwiftCtrl.getValue();
+				bankSwift = bankSwiftCtrl.getValue(),
+				bankKey = bankKeyCtrl.getValue();
 
 			bankNameCtrl.setValueState(bankName ? ValueState.None : ValueState.Error);
 			bankNameCtrl.setValueStateText(bankName ? "" : "Bank Name is required");
-			bankSwiftCtrl.setValueState(bankSwift || this._sCountryKey === "AU" ? ValueState.None : ValueState.Error);
+			bankSwiftCtrl.setValueState(bankSwift || this._sCountryKey === "AU" || this._sCountryKey === "CA" ? ValueState.None : ValueState.Error);
 			bankSwiftCtrl.setValueStateText(bankSwift ? "" : "Swift Code is required");
+			bankKeyCtrl.setValueState(bankKey ? ValueState.None : ValueState.Error);
+			bankKeyCtrl.setValueStateText(bankKey ? "" : "Bank Key is required");
 
-			return !!(bankName && (bankSwift || this._sCountryKey === "AU"));
+			return !!(bankName && bankKey && (bankSwift || this._sCountryKey === "AU" || this._sCountryKey === "CA"));
 
 		}
 	});

@@ -146,6 +146,22 @@ sap.ui.define([
 		checkBoxSelected: function (sYesNo) {
 			return sYesNo === "X";
 		},
+		
+		swiftRequired: function(companyCode, country, editBankDetails) {
+			if (!editBankDetails) {
+				return false;
+			}
+			
+			var countryMatch = "AU";
+			
+			switch (companyCode) {
+				case "1700": countryMatch = "CA"; break;
+				case "4300": countryMatch = "US"; break;
+				default: countryMatch = "AU";
+			}
+			
+			return country !== countryMatch;	
+		}
 	};
 
 });

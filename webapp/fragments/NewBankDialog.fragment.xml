@@ -1,0 +1,36 @@
+<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core" xmlns:f="sap.ui.layout.form">
+	<Dialog title="New Bank" contentWidth="40rem">
+		<content>
+			<MessageStrip showIcon="true" text="Bank number specified does not exist in SAP. Please provide detail to create this bank." 
+						  showCloseButton="false" type="Information" visible="{factSheet>/editMode}"/>
+			
+			<f:SimpleForm editable="true" labelSpanL="3" labelSpanM="3" layout="ResponsiveGridLayout" backgroundDesign="Transparent">
+				<f:content>
+					<Label id="newBankCountryLabel" labelFor="newBankCountry" text="Bank Country"/>
+					<Text  id="newBankCountry" text="{accountCountry}"/>
+					<Label id="newBankKeyLabel" labelFor="newBankKey" text="Bank Key" required="true"/>
+					<Input id="newBankKey" value="{accountBankKey}"/>
+					<Label id="newBankNameLabel" required="true" labelFor="newBankName" text="Bank Name"/>
+					<Input id="newBankName" maxLength="60" value="{bankName}"/>
+					<Label id="newBranchNameLabel" labelFor="newBranchName" text="Branch Name"/>
+					<Input id="newBranchName" maxLength="40" value="{bankBranch}"/>
+					<Label id="newBankSwiftLabel" 
+					required="{ parts: [ 'companyCode', 'accountCountry', 'true' ], formatter: '.formatter.swiftRequired' }" labelFor="newBankSwift" text="Swift Code"/>
+					<Input id="newBankSwift" maxLength="11" value="{bankSwiftCode}"/>
+					<Label id="newBankStreetLabel" labelFor="newBankStreet" text="Street"/>
+					<Input id="newBankStreet" maxLength="35" value="{bankStreet}"/>
+					<Label id="newBankCityLabel" labelFor="newBankCity" text="City"/>
+					<Input id="newBankCity" value="{bankCity}"/>
+					<Label id="newBankRegionLabel" labelFor="newBankRegion" text="Region"/>
+					<Select id="newBankRegion"  selectedKey="{bankRegion}" items="{path: 'regions>/', sorter: { path: 'name' }}">
+						<core:Item text="{regions>name}" key="{regions>key}"/>
+					</Select>
+				</f:content>
+			</f:SimpleForm>
+		</content>
+		<buttons>
+			<Button text="{i18n>btnCancel}" type="Reject" press="newBankDialogCancel"/>
+			<Button text="OK" type="Emphasized" press="newBankDialogOk"/>
+		</buttons>
+	</Dialog>
+</core:FragmentDefinition>

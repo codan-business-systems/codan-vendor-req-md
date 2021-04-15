@@ -117,6 +117,8 @@ sap.ui.define([
 
 			this._oQuestionExplainTextPopover = sap.ui.xmlfragment("approve.req.vendor.codan.fragments.QuestionExplainTextPopover", this);
 			this.getView().addDependent(this._oQuestionExplainTextPopover);
+			
+			this.getOwnerComponent().getModel("regions").setSizeLimit(9999);
 		},
 
 		/* =========================================================== */
@@ -822,8 +824,9 @@ sap.ui.define([
 								rej();
 							}
 						}, that);
+						
 
-					that._oNewBankDialog.open(that.getView(), that.getModel(), that.getModel().getProperty(that._sObjectPath + "/accountCountry"));
+					that._oNewBankDialog.open(that.getView(), that.getModel(), that._sObjectPath);
 				} else {
 					res();
 				}
